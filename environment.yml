@@ -1,0 +1,11 @@
+name: Selex-X-Genome
+channels:
+  - defaults
+  - conda-forge
+  - bioconda
+dependencies:
+  - python
+  - numpy
+  - pandas
+  - jupyterlab
+  
