@@ -35,6 +35,24 @@ def ENCODE_search(tf, organism, limit="all"):
     return search_results["@graph"]  # This key has the search results.
 
 
+# ! An observation I made. So Bioreplicate * Technical Replicate -> Unique Library -> Ideally have one fastq files associated with it
+# ! What does it mean if I find multiple such files?
+# ! 1) They could be paired ended (This info should be available in the exp metadata).
+# ! 2) The library is split into multiple fastq files.
+# ! Maybe ask this on BioStars.
+
+
+def get_fastq_accession(search_object):
+    """Returns the fastq accession for a given search_object (compenent of "@graph").
+    Technically, a search object corresponds to an experiment accession.
+
+    Args:
+        search_object (dict: @graph): An element of the @graph list returned by ENCODE search
+    Returns:
+        fastq file accession for that experiment.
+    """
+
+
 test = ENCODE_search("CTCF", "Mus+musculus", "2")
 
 print(json.dumps(test, indent=4))
