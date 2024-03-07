@@ -1,9 +1,13 @@
 """
-This program queries the ENCODE DB using its REST API. 
-Saves the search result as a json. data/encode_search/tf_organism.json
+This program queries the ENCODE DB using its REST API. Query = Gene Name  + Organism
+Saves the search result as a json. data/tf_organism/search_result.json
 """
 
 import json
+import logging
+from argparse import ArgumentParser
+from datetime import datetime
+from pathlib import Path
 
 import requests
 
@@ -32,32 +36,51 @@ def ENCODE_search(tf, organism, limit="all"):
     # Extract the JSON response as a python dictionary
     search_results = response.json()
 
-    return search_results["@graph"]  # This key has the search results.
+    return search_results  # This key has the search results.
 
 
 # ! An observation I made. So Bioreplicate * Technical Replicate -> Unique Library -> Ideally have one fastq files associated with it
 # ! What does it mean if I find multiple such files? Ans) The reads come from multiple lanes that is why they are split up.
-# ! 1) They could be paired ended (This info should be available in the exp metadata). 
+# ! 1) They could be paired ended (This info should be available in the exp metadata).
 # ! 2) The library is split into multiple fastq files.
 # ! Maybe ask this on BioStars.
 
 
-if __name__=="main":
-    
+if __name__ == "__main__":
 
+    parser = ArgumentParser()
+    parser.add_argument("tf", type=str)
+    parser.add_argument("organism", type=str)
+    parser.add_argument("limit", type=str, default="all")
 
+    args = parser.parse_args()
 
-def get_fastq_accession(search_object):
-    """Returns the fastq accession for a given search_object (compenent of "@graph").
-    Technically, a search object corresponds to an experiment accession.
+    target_dir = Path(__file__).parent.parent / Path(
+        f'data/{args.tf}_{args.organism.replace("+", "_")}'
+    )
+    target_dir.mkdir(parents=True, exist_ok=True)
 
-    Args:
-        search_object (dict: @graph): An element of the @graph list returned by ENCODE search
-    Returns:
-        fastq file accession for that experiment.
-    """
+    # Saving search results as json
+    json_file = target_dir / Path("search_results.json")
+    json_file.touch()
+    search_results = ENCODE_search(args.tf, args.organism, args.limit)
 
+    with json_file.open(mode="w") as js:
+        json.dump(search_results, js, indent=4)
 
-test = ENCODE_search("CTCF", "Mus+musculus", "2")
+    # Logging Info
+    log_file = target_dir / Path("search_log.json")
+    log_file.touch()
+    total_hits = len(search_results["@graph"])
 
-print(json.dumps(test, indent=4))
+    logging.basicConfig(
+        filename=log_file,
+        filemode="a",
+        level=logging.DEBUG,
+        format="%(name)s - %(levelname)s - %(message)s",
+    )
+    logging.info(
+        f"The query paramerters are tf={args.tf} organism={args.organism} limit={args.limit}"
+    )
+    logging.info(f"Date: {datetime.now():%c}")
+    logging.info(f"Total hits: {total_hits}")
