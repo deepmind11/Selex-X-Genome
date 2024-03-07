@@ -1,6 +1,6 @@
 """
 This program queries the ENCODE DB using its REST API. 
-Downloads the relevant fastq files for the experiments.
+Saves the search result as a json. data/encode_search/tf_organism.json
 """
 
 import json
@@ -36,10 +36,15 @@ def ENCODE_search(tf, organism, limit="all"):
 
 
 # ! An observation I made. So Bioreplicate * Technical Replicate -> Unique Library -> Ideally have one fastq files associated with it
-# ! What does it mean if I find multiple such files?
-# ! 1) They could be paired ended (This info should be available in the exp metadata).
+# ! What does it mean if I find multiple such files? Ans) The reads come from multiple lanes that is why they are split up.
+# ! 1) They could be paired ended (This info should be available in the exp metadata). 
 # ! 2) The library is split into multiple fastq files.
 # ! Maybe ask this on BioStars.
+
+
+if __name__=="main":
+    
+
 
 
 def get_fastq_accession(search_object):
