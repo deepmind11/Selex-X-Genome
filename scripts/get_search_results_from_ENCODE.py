@@ -43,7 +43,7 @@ def ENCODE_search(tf, organism, limit="all"):
 # ! What does it mean if I find multiple such files? Ans) The reads come from multiple lanes that is why they are split up.
 # ! 1) They could be paired ended (This info should be available in the exp metadata).
 # ! 2) The library is split into multiple fastq files.
-# ! Maybe ask this on BioStars.
+# ! Ask this on BioStars.
 
 
 if __name__ == "__main__":
@@ -69,7 +69,7 @@ if __name__ == "__main__":
         json.dump(search_results, js, indent=4)
 
     # Logging Info
-    log_file = target_dir / Path("search_log.json")
+    log_file = target_dir / Path("search.log")
     log_file.touch()
     total_hits = len(search_results["@graph"])
 
