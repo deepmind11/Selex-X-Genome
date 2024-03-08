@@ -14,22 +14,68 @@ This program queries the ENCODE DB using its REST API. Takes as input the search
 
 import json
 import logging
+import random
 from argparse import ArgumentParser
 from datetime import datetime
 from pathlib import Path
+from urllib.request import urlretrieve
 
 import requests
 
 
-def get_experiment_data_from_ENCODE(search_result):
+def download_and_subsample_fastq_files(experiment_json):
     """
-    Queries the ENCODE DB using the experiment accession and stores the json data in a python dict.
+    1. Download fastq files for all libraries belong to an experiment. (including control experiments)
+       Downlaod location: ENCSRXXXXXX/ENCLBXXXXXX/file.fastq
+    2. Subsample the fastq files. 2 million reads.
+    3. Compress the subsampled file.
+    4. Delete the original downloaded file.
+
+    Args:
+        experiment_json (file(.json)): Path to the experiment_data json file.
+    """
+    #Loading the json data in python dict.
+    with open(experiment_json, "r") as f:
+        expr_data = json.load(f)
+
+
+    libraries = list(
+        [
+            expr_data["replicates"][i]["library"]["accession"]
+            for i in range(len(expr_data["replicates"]))
+        ]
+    )
+
+    #Gather fastq files for each library
+    library_fastq_files = {}
+    for library in libraries:
+       library_fastq_files[library] = list([file for file in expr_data['files'] if file['replicate']['library']==f'/libraries/{library}/' and file['file_format']=='fastq'])
+    
+    # Download the files
+    for library in library_fastq_files.keys():
+        file_to_download = random.choice(library_fastq_files[library])
+        download_url = "https://www.encodeproject.org" + file_to_download['s3_uri']
+        filename = f'{file_to_download['accession']}.fastq'
+        filepath = Path(experiment_json).parent / Path(library) /Path(filename)
+        filepath.parent.mkdir(parents=True, exist_ok=True)
+
+        urlretrieve(download_url, filepath)
+
+        
+
+
+
+    
+
+def save_experiment_data_as_json(search_result, base_dir):
+    """
+    Queries the ENCODE DB using the experiment accession and saves the json data at {target_dir}.
 
     Args:
         search_result (dict: @graph): An element of the @graph list returned by ENCODE search
-    Returns:
-        expr_data (dict): Data associated with a given experiment.
+        base_dir (Path):       The base directory where all the experiments will be saved.
     """
+
     expr_accession = search_result["accession"]
 
     # Force return from the server in JSON format
@@ -44,7 +90,56 @@ def get_experiment_data_from_ENCODE(search_result):
     # Extract the JSON response as a python dictionary
     expr_data = response.json()
 
-    return expr_data
+    # Constructing the path to save the json
+    target_dir = base_dir / Path(expr_accession)
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    # Saving search results as json
+    json_file = target_dir / Path("experiment_data.json")
+    json_file.touch()
+
+    with json_file.open(mode="w") as js:
+        json.dump(expr_data, js, indent=4)
+
+    # Logging Info. Storing all the libraries and the control belonging to an experiment
+    log_file = target_dir / Path("experiment.log")
+    log_file.touch()
+
+    libraries = list(
+        [
+            expr_data["replicates"][i]["library"]["accession"]
+            for i in range(len(expr_data["replicates"]))
+        ]
+    )
+    controls = list(
+        [expr_data["possible_controls"][i]["accession"]]
+        for i in range(len(expr_data["possible_controls"]))
+    )
+
+    logging.basicConfig(
+        filename=log_file,
+        filemode="w",
+        level=logging.DEBUG,
+        format="%(name)s - %(levelname)s - %(message)s",
+    )
+    logging.info(
+        f"The query paramerters are tf={args.tf} organism={args.organism} expr_accession={expr_accession}"
+    )
+    logging.info(f"Date: {datetime.now():%c}")
+    logging.info(f"List of Libraries: {*libraries,}")
+    logging.info(f"Possible Controls: {*controls,}")
+
+    return libraries, controls
+
+
+def save_control_data_for_experiment(experiment_json):
+    """
+    Takes as input an exepriment_data.json file. Check if the control experiment data exists, if not 
+    download it. And then proceed to download all the relevant files for that control experiment.
+
+    Args:
+        experiment_json (file(.json)): data/tf_organism/experiments/ENCSRXXXXXX/experiment_data.json
+    """
 
 
 if __name__ == "__main__":
@@ -65,51 +160,14 @@ if __name__ == "__main__":
 
     search_results = search_results["@graph"]
 
-    # Querying the ENCODE DB for all the hits(expriments)
+    # Querying the ENCODE DB for all the hits(expriments) and saving as json.
     base_dir = Path(__file__).parent.parent / Path(
         f'data/{args.tf}_{args.organism.replace("+", "_")}/experiments'
     )
 
     for search_result in search_results:
+        save_experiment_data_as_json(search_result, base_dir)
 
-        expr_data = get_experiment_data_from_ENCODE(search_result)
-        expr_accession = search_result["accession"]
 
-        target_dir = base_dir / Path(expr_accession)
-        target_dir.mkdir(parents=True, exist_ok=True)
-
-        # Saving search results as json
-        json_file = target_dir / Path("experiment_data.json")
-        json_file.touch()
-
-        with json_file.open(mode="w") as js:
-            json.dump(expr_data, js, indent=4)
-
-        # Logging Info. Storing all the libraries and the control belonging to an experiment
-        # Logging Info
-        log_file = target_dir / Path("experiment.log")
-        log_file.touch()
-
-        libraries = list(
-            [
-                expr_data["replicates"][i]["library"]["accession"]
-                for i in range(len(expr_data["replicates"]))
-            ]
-        )
-        controls = list(
-            [expr_data["possible_controls"][i]["accession"]]
-            for i in range(len(expr_data["possible_controls"]))
-        )
-
-        logging.basicConfig(
-            filename=log_file,
-            filemode="w",
-            level=logging.DEBUG,
-            format="%(name)s - %(levelname)s - %(message)s",
-        )
-        logging.info(
-            f"The query paramerters are tf={args.tf} organism={args.organism} expr_accession={expr_accession}"
-        )
-        logging.info(f"Date: {datetime.now():%c}")
-        logging.info(f"List of Libraries: {*libraries,}")
-        logging.info(f"Possible Controls: {*controls,}")
+# ! Need to fix logging issues.
+# https://stackoverflow.com/questions/54591352/python-logging-new-log-file-each-loop-iteration

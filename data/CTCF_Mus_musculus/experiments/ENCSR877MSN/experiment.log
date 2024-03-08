@@ -1,11 +1,11 @@
 root - INFO - The query paramerters are tf=CTCF organism=Mus+musculus expr_accession=ENCSR877MSN
-root - INFO - Date: Thu Mar  7 15:21:04 2024
+root - INFO - Date: Thu Mar  7 17:03:40 2024
 root - INFO - List of Libraries: ('ENCLB330FTF', 'ENCLB148AZB', 'ENCLB600OJP', 'ENCLB143GUD')
 root - INFO - Possible Controls: (['ENCSR148TRG'],)
 urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.encodeproject.org:443
 urllib3.connectionpool - DEBUG - https://www.encodeproject.org:443 "GET /experiments/ENCSR644VYX HTTP/1.1" 301 179
 urllib3.connectionpool - DEBUG - https://www.encodeproject.org:443 "GET /experiments/ENCSR644VYX/ HTTP/1.1" 200 None
 root - INFO - The query paramerters are tf=CTCF organism=Mus+musculus expr_accession=ENCSR644VYX
-root - INFO - Date: Thu Mar  7 15:21:06 2024
+root - INFO - Date: Thu Mar  7 17:03:41 2024
 root - INFO - List of Libraries: ('ENCLB890UNK', 'ENCLB361HMF', 'ENCLB763PGY', 'ENCLB180ZFG')
 root - INFO - Possible Controls: (['ENCSR513BAE'],)

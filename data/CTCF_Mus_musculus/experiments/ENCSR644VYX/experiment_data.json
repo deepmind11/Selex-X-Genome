@@ -25407,8 +25407,8 @@
     "perturbed": false,
     "visualize": {
         "mm10": [
-            "UCSC",
-            "Ensembl"
+            "Ensembl",
+            "UCSC"
         ]
     },
     "@context": "/terms/",
