@@ -23,6 +23,7 @@ from urllib.request import urlretrieve
 import requests
 
 
+# ! Need to handle paired end files properly.
 def download_and_subsample_fastq_files(experiment_json):
     """
     1. Download fastq files for all libraries belong to an experiment. (including control experiments)
@@ -66,7 +67,9 @@ def download_and_subsample_fastq_files(experiment_json):
 
 
     
-
+# ! Instead of passing a single search result, maybe I can pass the entire search results. And let it download experiment data.
+# ! Need to fix logging issues.
+# https://stackoverflow.com/questions/54591352/python-logging-new-log-file-each-loop-iteration
 def save_experiment_data_as_json(search_result, base_dir):
     """
     Queries the ENCODE DB using the experiment accession and saves the json data at {target_dir}.
@@ -169,5 +172,3 @@ if __name__ == "__main__":
         save_experiment_data_as_json(search_result, base_dir)
 
 
-# ! Need to fix logging issues.
-# https://stackoverflow.com/questions/54591352/python-logging-new-log-file-each-loop-iteration
