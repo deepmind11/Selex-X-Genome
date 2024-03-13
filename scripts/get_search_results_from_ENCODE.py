@@ -4,7 +4,6 @@ Saves the search result as a json. data/tf_organism/search_result.json
 """
 
 import json
-import logging
 from argparse import ArgumentParser
 from datetime import datetime
 from pathlib import Path
@@ -68,19 +67,14 @@ if __name__ == "__main__":
     with json_file.open(mode="w") as js:
         json.dump(search_results, js, indent=4)
 
-    # Logging Info
+    # Saving meta data about search results into a log file
     log_file = target_dir / Path("search.log")
     log_file.touch()
     total_hits = len(search_results["@graph"])
 
-    logging.basicConfig(
-        filename=log_file,
-        filemode="a",
-        level=logging.DEBUG,
-        format="%(name)s - %(levelname)s - %(message)s",
-    )
-    logging.info(
-        f"The query paramerters are tf={args.tf} organism={args.organism} limit={args.limit}"
-    )
-    logging.info(f"Date: {datetime.now():%c}")
-    logging.info(f"Total hits: {total_hits}")
+    with log_file.open(mode="r") as f:
+        f.write(
+            f"The query paramerters are tf={args.tf} organism={args.organism} limit={args.limit}{chr(10)}"  # chr(10) => new line
+        )
+        f.write(f"Date: {datetime.now():%c}{chr(10)}")
+        f.write(f"Total hits: {total_hits}{chr(10)}")
