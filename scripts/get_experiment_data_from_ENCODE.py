@@ -44,8 +44,8 @@ def download_files(library_fastq_files,experiment_json_DR):
                     break
             
             # Getting the download url
-            download_url = "https://www.encodeproject.org" + file_to_download['s3_uri']
-            download_url_pe = "https://www.encodeproject.org" + pe_file['s3_uri']
+            download_url = "https://www.encodeproject.org" + file_to_download['href']
+            download_url_pe = "https://www.encodeproject.org" + pe_file['href']
             
             # Constructing the filnames and filepaths
             filename = f'{file_to_download['accession']}_{file_to_download['paired_end']}.fastq'
@@ -57,20 +57,32 @@ def download_files(library_fastq_files,experiment_json_DR):
             filepath.parent.mkdir(parents=True, exist_ok=True)
             filepath_pe.parent.mkdir(parents=True, exist_ok=True)
           
-            # Downloading the files
-            urlretrieve(download_url, filepath)
-            urlretrieve(download_url_pe, filepath_pe)
+            # Downloading the PE files in chunks
+            response = requests.get(download_url, stream=True)
+            with filepath.open(mode = 'wb') as file:
+                for chunk in response.iter_content(chunk_size = 1024*1024):
+                    file.write(chunk)
+            response_pe = requests.get(download_url_pe, stream=True)
+            with filepath_pe.open(mode = 'wb') as file_pe:
+                for chunk_pe in response_pe.iter_content(chunk_size = 1024*1024):
+                    file.write(chunk_pe)
+      
     
     else:
         # Downloading the SE files
         for library in library_fastq_files.keys():
             file_to_download = random.choice(library_fastq_files[library])
-            download_url = "https://www.encodeproject.org" + file_to_download['s3_uri']
+            download_url = "https://www.encodeproject.org" + file_to_download['href']
             filename = f'{file_to_download['accession']}.fastq'
             filepath = experiment_json_DR / Path(library) /Path(filename)
             filepath.parent.mkdir(parents=True, exist_ok=True)
-            #Downloading the file
-            urlretrieve(download_url, filepath)
+            
+            #Downloading the file in chunks
+            response = requests.get(download_url, stream=True)
+            with filepath.open(mode = 'wb') as file:
+                for chunk in response.iter_content(chunk_size = 1024*1024):
+                    file.write(chunk)
+            
         
     return
 
@@ -139,9 +151,9 @@ def save_experiment_data_as_json(search_result, base_dir):
 # ! Also, need a way to parallelize downloads.
 def download_and_subsample_fastq_files(experiment_json):
     """
-    1. Download fastq files for all libraries belong to an experiment. (including control experiments)
-       Downlaod location: ENCSRXXXXXX/ENCLBXXXXXX/file.fastq
-    2. Subsample the fastq files. 2 million reads.
+    1. Download fastq files for all libraries belong to an experiment.
+       Downlaod location: ENCSRXXXXXX/ENCLBXXXXXX/file.fastq.gz
+    2. Subsample the fastq.gz files. Decompress and subsample. 2 million reads.
     3. Compress the subsampled file.
     4. Delete the original downloaded file.
 
@@ -212,7 +224,12 @@ if __name__ == "__main__":
         f'data/{args.tf}_{args.organism.replace("+", "_")}/experiments'
     )
 
+    # ! I should implement concurrency here. 
     for search_result in search_results:
         save_experiment_data_as_json(search_result, base_dir)
+
+        # !Downlaod the files for that experiment
+
+        # !Downlaod the control files for that experiment
 
 
