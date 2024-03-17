@@ -8,5 +8,4 @@ dependencies:
   - numpy
   - pandas
   - jupyterlab
-  - aiohttp
   
