@@ -9,7 +9,6 @@ Then it download all the controls (if necessary) for the experiment. /data/Contr
 """
 
 import json
-import random
 import subprocess
 from argparse import ArgumentParser
 from datetime import datetime
