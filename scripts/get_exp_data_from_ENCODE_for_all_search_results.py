@@ -114,7 +114,8 @@ def slurm_job_to_download_and_process_files(experiment_json):
             f"#SBATCH --error={str(experiment_json.parent)}/{expr_accession}.err\n"
         )
         jf.writelines("#SBATCH -c 1\n")
-        jf.writelines("--mem-per-cpu=5G\n")
+        jf.writelines("#SBATCH --mem-per-cpu=5G\n")
+        jf.writelines("#SBATCH --account=hblab\n")
         jf.writelines("#SBATCH -t 2:30:00\n\n")
         jf.writelines(
             f'{str(Path(__file__).parent/Path("download_and_subsample_fastq_files.py"))} {str(experiment_json)}'
