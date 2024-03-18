@@ -65,7 +65,7 @@ def save_experiment_data_as_json(expr_accession, base_dir):
         for i in range(len(expr_data["possible_controls"]))
     )
 
-    with log_file.open(mode="r") as log:
+    with log_file.open(mode="w") as log:
 
         log.write(
             f"The query paramerters are tf={args.tf} organism={args.organism} expr_accession={expr_accession}{chr(10)}"
@@ -160,6 +160,8 @@ def save_control_data_for_experiment(experiment_json):
             control_experiment_json = control_DR / Path("experiment_data.json")
             # Submitting job to cluster for downloading all the files
             slurm_job_to_download_and_process_files(control_experiment_json)
+
+    return
 
 
 if __name__ == "__main__":
