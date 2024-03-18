@@ -48,6 +48,7 @@ def process_fastqgz_file(fastq_file_path, size = 2 * (10**6)):
 
     return
 
+#
 def download_pe_files(library, files, experiment_json_DR):
     """Downloads fastq files (one pair for PE) for a given library (belonging to a particular experiment).
 
@@ -160,7 +161,7 @@ def download_and_subsample_fastq_files(experiment_json):
     # Argument list to passed to executor.map
     arguments = list([(library, files, Path(experiment_json).parent) for library, files in library_fastq_files.items()])
 
-    if library_fastq_files[list(library_fastq_files.keys())[0]]['run_type'] == 'paired-ended':
+    if library_fastq_files[list(library_fastq_files.keys())[0]][0]['run_type'] == 'paired-ended':
         with ThreadPoolExecutor() as executor:
             executor.map(lambda args: download_pe_files(*args), arguments)
     else:

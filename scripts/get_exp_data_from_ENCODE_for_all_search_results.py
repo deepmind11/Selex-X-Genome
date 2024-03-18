@@ -1,3 +1,13 @@
+"""
+Iterates through all the search results for a given (TF + organism) from the 
+get_search_results_from_ENCODE.py script.
+
+For each hit, it queries the ENCODE DB and download the experiment json. /data/Tf+organism/experiment/ENCSRXXXXXX/experiment.json
+It then downloads fastq files for all libraries in the experiment. Processes these fastq files
+Then it download all the controls (if necessary) for the experiment. /data/Control/ENCSRXXXXXX
+
+"""
+
 import json
 import random
 import subprocess
@@ -144,13 +154,11 @@ def save_control_data_for_experiment(experiment_json):
             control_DR.mkdir(parents=True)
 
             # Saving the JSON for the control experiment
-            save_experiment_data_as_json(
-                control, control_DR.parent
-            )  # ! Will this work for control experiments?
+            save_experiment_data_as_json(control, control_DR.parent)
 
             # Path to the control experiment json
             control_experiment_json = control_DR / Path("experiment_data.json")
-            # Submitting job to cluster
+            # Submitting job to cluster for downloading all the files
             slurm_job_to_download_and_process_files(control_experiment_json)
 
 
