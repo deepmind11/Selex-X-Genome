@@ -1,5 +1,6 @@
 import json
 import random
+import subprocess
 from argparse import ArgumentParser
 from datetime import datetime
 from pathlib import Path
@@ -7,16 +8,14 @@ from pathlib import Path
 import requests
 
 
-def save_experiment_data_as_json(search_result, base_dir):
+def save_experiment_data_as_json(expr_accession, base_dir):
     """
     Queries the ENCODE DB using the experiment accession and saves the json data at {target_dir}.
 
     Args:
-        search_result (dict: @graph): An element of the @graph list returned by ENCODE search
+        expr_accession (String): The experiment accession ENCSRXXXXXX
         base_dir (Path):       The base directory where all the experiments will be saved.
     """
-
-    expr_accession = search_result["accession"]
 
     # Force return from the server in JSON format
     headers = {"accept": "application/json"}
@@ -67,8 +66,53 @@ def save_experiment_data_as_json(search_result, base_dir):
 
     return
 
-def download_and_process_fastq_files_for_experiment(experiment):
-    
+
+def slurm_job_to_download_and_process_files(experiment_json):
+    """
+    Submits the download_and_subsample_fastq_files.py script to the cluster.
+    The above script takes the experiment_json(Path) as an argument.
+    It downloads the fastq_files for all the libraries, subsamples (def = 2 million),
+    and converts the fastq file to fasta. Finally, all fastq file are deleted/
+
+
+    1. Create a ".job" file specifying the slurm configurations.
+    2. Save the job file to experiment_json.parent
+    3. Submit the job to the cluster.
+
+    Args:
+        experiment_json (Path): Path to experiment json file.
+    """
+    # Getting the experiment accession
+    with experiment_json.open(mode="r") as f:
+        expr_data = json.load(f)
+    expr_accession = expr_data["accession"]
+
+    # Create a .job file
+    download_and_process_job_file = experiment_json.parent / Path(
+        f"{expr_accession}.job"
+    )
+    download_and_process_job_file.touch()
+
+    # Specify the configuration
+    with download_and_process_job_file.open(mode="w") as jf:
+        jf.write("#!/bin/bash\n")
+        jf.writelines(f"#SBATCH --job-name={expr_accession}.job\n")
+        jf.writelines(
+            f"#SBATCH --output={str(experiment_json.parent)}/{expr_accession}.out\n"
+        )
+        jf.writelines(
+            f"#SBATCH --error={str(experiment_json.parent)}/{expr_accession}.err\n"
+        )
+        jf.writelines("#SBATCH -c 1\n")
+        jf.writelines("--mem-per-cpu=5G\n")
+        jf.writelines("#SBATCH -t 2:30:00\n\n")
+        jf.writelines(
+            f'{str(Path(__file__).parent/Path("download_and_subsample_fastq_files.py"))} {str(experiment_json)}'
+        )
+    # Submit Job to cluster
+    subprocess.run(["sbatch", str(download_and_process_job_file)])
+
+    return
 
 
 def save_control_data_for_experiment(experiment_json):
@@ -79,6 +123,35 @@ def save_control_data_for_experiment(experiment_json):
     Args:
         experiment_json (file(.json)): data/tf_organism/experiments/ENCSRXXXXXX/experiment_data.json
     """
+    # Loading the json
+    with experiment_json.open(mode="r") as f:
+        expr_data = json.load(f)
+
+    # Getting the controls
+    controls = list(
+        [expr_data["possible_controls"][i]["accession"]]
+        for i in range(len(expr_data["possible_controls"]))
+    )
+
+    for control in controls:
+        # Get the DR for the control experiment
+        control_DR = Path(__file__).parent.parent / Path(f"data/Control/{control}")
+
+        # Check if the control experiment exists; if it does then go to next control
+        if control_DR.exists():
+            continue
+        else:
+            control_DR.mkdir(parents=True)
+
+            # Saving the JSON for the control experiment
+            save_experiment_data_as_json(
+                control, control_DR.parent
+            )  # ! Will this work for control experiments?
+
+            # Path to the control experiment json
+            control_experiment_json = control_DR / Path("experiment_data.json")
+            # Submitting job to cluster
+            slurm_job_to_download_and_process_files(control_experiment_json)
 
 
 if __name__ == "__main__":
@@ -106,11 +179,18 @@ if __name__ == "__main__":
 
     for search_result in search_results:
 
+        # Getting the experiment accession
+        expr_accession = search_result["accession"]
+
         # Saving the experiment json.
-        save_experiment_data_as_json(search_result, base_dir)
+        save_experiment_data_as_json(expr_accession, base_dir)
 
-        # Starting a new process to download the files for that experiment.
+        # Starting a new process to download the files for current experiment.
+        # Getting the path to experiment json
+        target_dir = base_dir / Path(expr_accession)
+        experiment_json = target_dir / Path("experiment_data.json")
+        # Submitting job to cluster
+        slurm_job_to_download_and_process_files(experiment_json)
 
-        # !Downlaod the files for that experiment
-
-        # !Downlaod the control files for that experiment
+        # Downlaod the control files for that experiment
+        save_control_data_for_experiment(experiment_json)
