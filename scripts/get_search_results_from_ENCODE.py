@@ -1,5 +1,5 @@
 """
-This program queries the ENCODE DB using its REST API. Query = Gene Name  + Organism
+This program queries the ENCODE DB using its REST API. Query = <GeneName>  + <Organism:Homo+Sapiens>
 Saves the search result as a json. data/tf_organism/search_result.json
 """
 
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("tf", type=str)
     parser.add_argument("organism", type=str)
-    parser.add_argument("limit", type=str, default="all")
+    parser.add_argument("--limit", type=str, default="all")
 
     args = parser.parse_args()
 
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     log_file.touch()
     total_hits = len(search_results["@graph"])
 
-    with log_file.open(mode="r") as f:
+    with log_file.open(mode="w") as f:
         f.write(
             f"The query paramerters are tf={args.tf} organism={args.organism} limit={args.limit}{chr(10)}"  # chr(10) => new line
         )
