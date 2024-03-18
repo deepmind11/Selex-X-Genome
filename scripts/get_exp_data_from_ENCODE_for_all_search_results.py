@@ -61,8 +61,10 @@ def save_experiment_data_as_json(expr_accession, base_dir):
         ]
     )
     controls = list(
-        [expr_data["possible_controls"][i]["accession"]]
-        for i in range(len(expr_data["possible_controls"]))
+        [
+            expr_data["possible_controls"][i]["accession"]
+            for i in range(len(expr_data["possible_controls"]))
+        ]
     )
 
     with log_file.open(mode="w") as log:
@@ -140,8 +142,10 @@ def save_control_data_for_experiment(experiment_json):
 
     # Getting the controls
     controls = list(
-        [expr_data["possible_controls"][i]["accession"]]
-        for i in range(len(expr_data["possible_controls"]))
+        [
+            expr_data["possible_controls"][i]["accession"]
+            for i in range(len(expr_data["possible_controls"]))
+        ]
     )
 
     for control in controls:
