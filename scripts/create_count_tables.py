@@ -27,12 +27,11 @@ def create_table(library, controls):
         count_table_path = library.parent / Path(f"x{control.parent.parent.name}.tsv")
         subprocess.run(
             ["~/Probound/pb", "make-table", str(control), str(library)],
-            ">",
-            str(count_table_path),
+            stdout=count_table_path,
         )
 
 
-def create_tables_for_experiment(experiment):
+def create_tables_for_exp(experiment):
     """
     Creates all the count tables for the experiment(ENCSRXXXXXX)
 
@@ -82,8 +81,22 @@ def create_tables_for_experiment(experiment):
 
 
 if __name__ == "__main__":
+
     parser = ArgumentParser()
-    parser.add_argument("experiment_json", type=str)
+    parser.add_argument("tf", type=str)
+    parser.add_argument("organism", type=str)
+
     args = parser.parse_args()
 
-    create_tables_for_experiment(Path(args.experiment_json))
+    # Get the list of experiments.
+    experiments = []
+    for exp_folder in (
+        Path(__file__).parent.parent
+        / Path(f"data/{args.tf}_{args.organism.replace('+', '_')}")
+        / Path("experiments")
+    ).iterdir():
+        experiments.append(exp_folder)
+
+    # ! Ensure that this runs in parallel, won't subprocess achive that
+    for experiment in experiments:
+        create_tables_for_exp(experiment)

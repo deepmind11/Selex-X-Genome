@@ -46,25 +46,11 @@ def process_fastqgz_file(fastq_file_path, size=2 * (10**6)):
 
     # Calling seqtk to subsample and convert to fasta
     subprocess.run(
-        [
-            "seqtk",
-            "sample",
-            f"-s{seed}",
-            str(fastq_file_path),
-            str(size),
-            ">",
-            str(subsampled_fastq_file),
-        ]
+        ["seqtk", "sample", f"-s{seed}", str(fastq_file_path), str(size)],
+        stdout=subsampled_fastq_file,
     )
     subprocess.run(
-        [
-            "seqtk",
-            "seq",
-            "-a",
-            str(subsampled_fastq_file),
-            ">",
-            str(subsampled_fasta_file),
-        ]
+        ["seqtk", "seq", "-a", str(subsampled_fastq_file)], stdout=subsampled_fasta_file
     )
 
     # Deleting the original and subsampled fastq files
