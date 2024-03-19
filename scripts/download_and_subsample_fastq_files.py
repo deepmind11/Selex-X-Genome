@@ -22,6 +22,7 @@ def process_fastqgz_file(fastq_file_path, size=2 * (10**6)):
         fastq_file_path (Path): Path to the .fastq.gz file
         size (int, optional): Size of the sample. Defaults to 2 * (10**6).
     """
+
     # Defining the seed path
     seed_Path = fastq_file_path.parent / Path("seed.txt")
 
@@ -95,10 +96,12 @@ def download_pe_files(library, files, experiment_json_DR):
     download_url_pe = "https://www.encodeproject.org" + pe_file["href"]
 
     # Constructing the filnames and filepaths
-    filename = f'{file_to_download["accession"]}_{file_to_download["paired_end"]}.fastq'
+    filename = (
+        f'{file_to_download["accession"]}_{file_to_download["paired_end"]}.fastq.gz'
+    )
     filepath = experiment_json_DR / Path(library) / Path(filename)
     ## For PE
-    filename_pe = f'{pe_file["accession"]}_{pe_file["paired_end"]}.fastq'
+    filename_pe = f'{pe_file["accession"]}_{pe_file["paired_end"]}.fastq.gz'
     filepath_pe = experiment_json_DR / Path(library) / Path(filename_pe)
 
     filepath.parent.mkdir(parents=True, exist_ok=True)
@@ -133,7 +136,7 @@ def download_se_files(library, files, experiment_json_DR):
     download_url = "https://www.encodeproject.org" + file_to_download["href"]
 
     # Constructing the filnames and filepaths
-    filename = f'{file_to_download["accession"]}.fastq'
+    filename = f'{file_to_download["accession"]}.fastq.gz'
     filepath = experiment_json_DR / Path(library) / Path(filename)
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
@@ -172,7 +175,7 @@ def download_and_subsample_fastq_files(experiment_json):
     library_fastq_files = dict(zip(libraries, [[] for i in range(len(libraries))]))
 
     for file in expr_data["files"]:
-        if "replicate" in file.keys() and file["file_format"] == "fastq":
+        if "replicate" in file.keys() and file["file_format"] == "fastq.gz":
             library_fastq_files[file["replicate"]["library"][11:-1]].append(file)
 
     # Download the files for each library concurrently
@@ -203,8 +206,8 @@ def download_and_subsample_fastq_files(experiment_json):
 
         # Process if fastq file
         for file in fastq_files_dir.iterdir():
-            if file.suffix == ".fastq":
-                process_fastqgz_file(file, size=2 * (10**6))
+            if file.suffix == ".gz":
+                process_fastqgz_file(file)
 
     return
 
@@ -212,7 +215,7 @@ def download_and_subsample_fastq_files(experiment_json):
 if __name__ == "__main__":
 
     parser = ArgumentParser()
-    parser.add_argument("experiment_json", type=Path)
+    parser.add_argument("experiment_json", type=str)
     args = parser.parse_args()
 
-    download_and_subsample_fastq_files(args.experiment_json)
+    download_and_subsample_fastq_files(Path(args.experiment_json))
