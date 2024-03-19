@@ -25,10 +25,11 @@ def create_table(library, controls):
     """
     for control in controls:
         count_table_path = library.parent / Path(f"x{control.parent.parent.name}.tsv")
-        subprocess.run(
-            ["~/Probound/pb", "make-table", str(control), str(library)],
-            stdout=count_table_path,
-        )
+        with open(count_table_path, "w") as output_file:
+            subprocess.run(
+                ["~/Probound/pb", "make-table", str(control), str(library)],
+                stdout=output_file,
+            )
 
 
 def create_tables_for_exp(experiment):
