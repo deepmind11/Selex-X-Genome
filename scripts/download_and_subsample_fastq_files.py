@@ -175,7 +175,9 @@ def download_and_subsample_fastq_files(experiment_json):
     library_fastq_files = dict(zip(libraries, [[] for i in range(len(libraries))]))
 
     for file in expr_data["files"]:
-        if "replicate" in file.keys() and file["file_format"] == "fastq.gz":
+        if (
+            "replicate" in file.keys() and file["file_format"] == "fastq"
+        ):  # Should be fastq not fastq.gz
             library_fastq_files[file["replicate"]["library"][11:-1]].append(file)
 
     # Download the files for each library concurrently
