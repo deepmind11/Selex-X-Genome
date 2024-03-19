@@ -31,6 +31,7 @@ def process_fastqgz_file(fastq_file_path, size=2 * (10**6)):
         with seed_Path.open(mode="r") as seed_file:
             seed = int(seed_file.read_text())
     else:
+        seed_Path.touch()
         with seed_Path.open(mode="w") as seed_file:
             seed = random.randint(1, 100)
             seed_file.write(str(seed))
