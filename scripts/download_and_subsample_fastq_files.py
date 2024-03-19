@@ -26,7 +26,7 @@ def process_fastqgz_file(fastq_file_path, size=2 * (10**6)):
     seed_Path = fastq_file_path.parent / Path("seed.txt")
 
     # Read/Set the seed
-    if seed_Path.exist():
+    if seed_Path.exists():
         with seed_Path.open(mode="r") as seed_file:
             seed = int(seed_file.read_text())
     else:
