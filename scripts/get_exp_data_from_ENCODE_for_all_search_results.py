@@ -115,7 +115,7 @@ def slurm_job_to_download_and_process_files(experiment_json):
             f"#SBATCH --error={str(experiment_json.parent)}/{expr_accession}.err\n"
         )
         jf.writelines("#SBATCH -c 1\n")
-        jf.writelines("#SBATCH --mem-per-cpu=5G\n")
+        jf.writelines("#SBATCH --mem-per-cpu=2G\n")
         jf.writelines("#SBATCH --account=hblab\n")
         jf.writelines("#SBATCH -t 2:30:00\n\n")
         jf.writelines(

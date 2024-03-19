@@ -199,11 +199,11 @@ def download_and_subsample_fastq_files(experiment_json):
     for library in library_fastq_files:
 
         # Directory of the fastq files
-        fastq_files_dir = Path(experiment_json).parent / Path(library)
+        fastq_files_dir = Path(experiment_json).parent / Path(str(library))
 
         # Process if fastq file
         for file in fastq_files_dir.iterdir():
-            if file.suffix == ".fastq.gz":
+            if file.suffix == ".fastq":
                 process_fastqgz_file(file, size=2 * (10**6))
 
     return
