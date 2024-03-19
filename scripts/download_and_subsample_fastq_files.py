@@ -23,7 +23,7 @@ def process_fastqgz_file(fastq_file_path, size=2 * (10**6)):
         size (int, optional): Size of the sample. Defaults to 2 * (10**6).
     """
     # Defining the seed path
-    seed_Path = (fastq_file_path.parent / Path("seed.txt")).exists()
+    seed_Path = fastq_file_path.parent / Path("seed.txt")
 
     # Read/Set the seed
     if seed_Path.exist():
