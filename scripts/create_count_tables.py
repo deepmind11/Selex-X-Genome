@@ -27,7 +27,12 @@ def create_table(library, controls):
         count_table_path = library.parent / Path(f"x{control.parent.parent.name}.tsv")
         with open(count_table_path, "w") as output_file:
             subprocess.run(
-                ["~/Probound/pb", "make-table", str(control), str(library)],
+                [
+                    "/burg/home/hg2604/ProBound/pb",
+                    "make-table",
+                    str(control),
+                    str(library),
+                ],
                 stdout=output_file,
             )
 
@@ -98,6 +103,6 @@ if __name__ == "__main__":
     ).iterdir():
         experiments.append(exp_folder)
 
-    # ! Ensure that this runs in parallel, won't subprocess achive that
+    # ! Ensure that this runs in parallel, won't subprocess achieve that?
     for experiment in experiments:
         create_tables_for_exp(experiment)
