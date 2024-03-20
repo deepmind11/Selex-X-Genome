@@ -27,7 +27,7 @@ def create_table(library, controls):
         count_table_path = library.parent / Path(f"x{control.parent.parent.name}.tsv")
         with open(count_table_path, "w") as output_file:
             subprocess.run(
-                ["~/Probound/pb", "make-table", str(control), str(library)],
+                ["/burg/home/hg2604/ProBound/pb", "make-table", str(control), str(library)],
                 stdout=output_file,
             )
 

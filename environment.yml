@@ -9,4 +9,7 @@ dependencies:
   - pandas
   - jupyterlab
   - requests
+  - bedtools=2.31.1
+  - samtools=1.19.2
+  - bowtie2=2.5.3
   

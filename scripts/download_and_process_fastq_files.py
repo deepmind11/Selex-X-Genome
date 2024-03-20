@@ -10,7 +10,7 @@ from pathlib import Path
 import requests
 
 
-def process_fastqgz_file(fastq_file_path, size=2 * (10**6)):
+def process_se_fastqgz_file(fastq_file_path, size=2 * (10**6)):
     """
     0.1 Checks if the seed_log_file exists, if it does reads seed from seed_log_file
     0. else , sets random seed for subsampling and saves it to a seed_log_file
@@ -62,6 +62,57 @@ def process_fastqgz_file(fastq_file_path, size=2 * (10**6)):
 
     return
 
+def process_pe_fastqgz_file(fastq_file_path, size=2 * (10**6)):
+    """
+    0.1 Checks if the seed_log_file exists, if it does reads seed from seed_log_file
+    0. else , sets random seed for subsampling and saves it to a seed_log_file
+
+    1. Subsamples a fastq.gz file and deletes the original
+    2. Converts the subsample file to fasta format and deletes the original
+
+    Args:
+        fastq_file_path (Path): Path to the .fastq.gz file
+        size (int, optional): Size of the sample. Defaults to 2 * (10**6).
+    """
+
+    # Defining the seed path
+    seed_Path = fastq_file_path.parent / Path("seed.txt")
+
+    # Read/Set the seed
+    if seed_Path.exists():
+        with seed_Path.open(mode="r") as seed_file:
+            seed = int(seed_file.read_text())
+    else:
+        seed_Path.touch()
+        with seed_Path.open(mode="w") as seed_file:
+            seed = random.randint(1, 100)
+            seed_file.write(str(seed))
+
+    # Defining Path to subsampled fastq and fasta files
+    subsampled_fastq_file = fastq_file_path.parent / Path(
+        fastq_file_path.stem + "_subsampled.fq"
+    )
+    subsampled_fasta_file = fastq_file_path.parent / Path(
+        fastq_file_path.stem + "_subsampled.fa"
+    )
+
+    # Calling seqtk to subsample and convert to fasta
+    with open(subsampled_fastq_file, "w") as output_file:
+        subprocess.run(
+            ["seqtk", "sample", f"-s{seed}", str(fastq_file_path), str(size)],
+            stdout=output_file,
+        )
+
+    with open(subsampled_fasta_file, "w") as output_file:
+        subprocess.run(
+            ["seqtk", "seq", "-a", str(subsampled_fastq_file)], stdout=output_file
+        )
+
+    # Deleting the original and subsampled fastq files
+    fastq_file_path.unlink()
+    subsampled_fastq_file.unlink()
+
+    return
 
 #
 def download_pe_files(library, files, experiment_json_DR):
@@ -73,8 +124,23 @@ def download_pe_files(library, files, experiment_json_DR):
         experiment_json_DR (Path): Path to the directory containing the experiment json file.
     """
 
+    # Figuring out which file to download
+    # Defining the path to store the file number for reproducibility
+    filenum_Path = experiment_json_DR / Path(library) / Path("filenumber.txt")
+
+    # Read/Set the file number
+    if filenum_Path.exists():
+        with filenum_Path.open(mode="r") as filenum_file:
+            filenum = int(filenum_file.read_text())
+    else:
+        filenum_Path.touch()
+        with filenum_Path.open(mode="w") as filenum_file:
+            filenum = random.randint(0, len(files)-1)
+            filenum_file.write(str(filenum))
+    
+    
     # Choosing the files
-    file_to_download = random.choice(files)
+    file_to_download = files[filenum]
     ## Getting the corresponding paired end file
     for file in files:
         if file["accession"] == file_to_download["paired_with"][7:][:-1]:
@@ -118,9 +184,23 @@ def download_se_files(library, files, experiment_json_DR):
         files (list):     A list of fastq file objects(jsons) belonging to the library.
         experiment_json_DR (Path): Path to the directory containing the experiment json file.
     """
+    
+    # Figuring out which file to download
+    # Defining the path to store the file number for reproducibility
+    filenum_Path = experiment_json_DR / Path(library) / Path("filenumber.txt")
+
+    # Read/Set the file number
+    if filenum_Path.exists():
+        with filenum_Path.open(mode="r") as filenum_file:
+            filenum = int(filenum_file.read_text())
+    else:
+        filenum_Path.touch()
+        with filenum_Path.open(mode="w") as filenum_file:
+            filenum = random.randint(0, len(files)-1)
+            filenum_file.write(str(filenum))
 
     # Choosing the file
-    file_to_download = random.choice(files)
+    file_to_download = files[filenum]
 
     # Getting the download url
     download_url = "https://www.encodeproject.org" + file_to_download["href"]
