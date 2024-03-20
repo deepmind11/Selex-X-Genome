@@ -98,6 +98,6 @@ if __name__ == "__main__":
     ).iterdir():
         experiments.append(exp_folder)
 
-    # ! Ensure that this runs in parallel, won't subprocess achive that
+    # ! Ensure that this runs in parallel, won't subprocess achieve that?
     for experiment in experiments:
         create_tables_for_exp(experiment)

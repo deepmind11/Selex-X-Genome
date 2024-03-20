@@ -10,13 +10,13 @@ from pathlib import Path
 import requests
 
 
-def process_se_fastqgz_file(fastq_file_path, size=2 * (10**6)):
+def process_fastqgz_file(fastq_file_path, size=2 * (10**6)):
     """
     0.1 Checks if the seed_log_file exists, if it does reads seed from seed_log_file
     0. else , sets random seed for subsampling and saves it to a seed_log_file
 
     1. Subsamples a fastq.gz file and deletes the original
-    2. Converts the subsample file to fasta format and deletes the original
+ 
 
     Args:
         fastq_file_path (Path): Path to the .fastq.gz file
@@ -36,85 +36,25 @@ def process_se_fastqgz_file(fastq_file_path, size=2 * (10**6)):
             seed = random.randint(1, 100)
             seed_file.write(str(seed))
 
-    # Defining Path to subsampled fastq and fasta files
+    # Defining Path to subsampled fastq
     subsampled_fastq_file = fastq_file_path.parent / Path(
-        fastq_file_path.stem + "_subsampled.fq"
-    )
-    subsampled_fasta_file = fastq_file_path.parent / Path(
-        fastq_file_path.stem + "_subsampled.fa"
+        fastq_file_path.stem[:-5] + "_subsampled.fq"
     )
 
-    # Calling seqtk to subsample and convert to fasta
+    # Calling seqtk to subsample fastq
     with open(subsampled_fastq_file, "w") as output_file:
         subprocess.run(
             ["seqtk", "sample", f"-s{seed}", str(fastq_file_path), str(size)],
             stdout=output_file,
         )
 
-    with open(subsampled_fasta_file, "w") as output_file:
-        subprocess.run(
-            ["seqtk", "seq", "-a", str(subsampled_fastq_file)], stdout=output_file
-        )
-
-    # Deleting the original and subsampled fastq files
     fastq_file_path.unlink()
-    subsampled_fastq_file.unlink()
+
 
     return
 
-def process_pe_fastqgz_file(fastq_file_path, size=2 * (10**6)):
-    """
-    0.1 Checks if the seed_log_file exists, if it does reads seed from seed_log_file
-    0. else , sets random seed for subsampling and saves it to a seed_log_file
 
-    1. Subsamples a fastq.gz file and deletes the original
-    2. Converts the subsample file to fasta format and deletes the original
 
-    Args:
-        fastq_file_path (Path): Path to the .fastq.gz file
-        size (int, optional): Size of the sample. Defaults to 2 * (10**6).
-    """
-
-    # Defining the seed path
-    seed_Path = fastq_file_path.parent / Path("seed.txt")
-
-    # Read/Set the seed
-    if seed_Path.exists():
-        with seed_Path.open(mode="r") as seed_file:
-            seed = int(seed_file.read_text())
-    else:
-        seed_Path.touch()
-        with seed_Path.open(mode="w") as seed_file:
-            seed = random.randint(1, 100)
-            seed_file.write(str(seed))
-
-    # Defining Path to subsampled fastq and fasta files
-    subsampled_fastq_file = fastq_file_path.parent / Path(
-        fastq_file_path.stem + "_subsampled.fq"
-    )
-    subsampled_fasta_file = fastq_file_path.parent / Path(
-        fastq_file_path.stem + "_subsampled.fa"
-    )
-
-    # Calling seqtk to subsample and convert to fasta
-    with open(subsampled_fastq_file, "w") as output_file:
-        subprocess.run(
-            ["seqtk", "sample", f"-s{seed}", str(fastq_file_path), str(size)],
-            stdout=output_file,
-        )
-
-    with open(subsampled_fasta_file, "w") as output_file:
-        subprocess.run(
-            ["seqtk", "seq", "-a", str(subsampled_fastq_file)], stdout=output_file
-        )
-
-    # Deleting the original and subsampled fastq files
-    fastq_file_path.unlink()
-    subsampled_fastq_file.unlink()
-
-    return
-
-#
 def download_pe_files(library, files, experiment_json_DR):
     """Downloads fastq files (one pair for PE) for a given library (belonging to a particular experiment).
 
@@ -276,7 +216,7 @@ def download_and_subsample_fastq_files(experiment_json):
         # Directory of the fastq files
         fastq_files_dir = Path(experiment_json).parent / Path(str(library))
 
-        # Process if fastq file
+        # Process if fastq file (This will work for paired end too, as the seed will be saved to file)
         for file in fastq_files_dir.iterdir():
             if file.suffix == ".gz":
                 process_fastqgz_file(file)
