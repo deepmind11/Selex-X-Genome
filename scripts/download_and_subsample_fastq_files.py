@@ -38,7 +38,7 @@ def process_fastqgz_file(fastq_file_path, size=2 * (10**6)):
 
     # Defining Path to subsampled fastq
     subsampled_fastq_file = fastq_file_path.parent / Path(
-        fastq_file_path.stem[:-5] + "_subsampled.fq"
+        fastq_file_path.stem[:-6] + "_subsampled.fq"
     )
 
     # Calling seqtk to subsample fastq
@@ -63,7 +63,9 @@ def download_pe_files(library, files, experiment_json_DR):
         files (list):     A list of fastq file objects(jsons) belonging to the library.
         experiment_json_DR (Path): Path to the directory containing the experiment json file.
     """
-
+    
+    # Creating the directory for the library
+    (experiment_json_DR / Path(library)).mkdir(parents=True, exist_ok=True) 
     # Figuring out which file to download
     # Defining the path to store the file number for reproducibility
     filenum_Path = experiment_json_DR / Path(library) / Path("filenumber.txt")
@@ -125,6 +127,8 @@ def download_se_files(library, files, experiment_json_DR):
         experiment_json_DR (Path): Path to the directory containing the experiment json file.
     """
     
+    # Creating the directory for the library
+    (experiment_json_DR / Path(library)).mkdir(parents=True, exist_ok=True) 
     # Figuring out which file to download
     # Defining the path to store the file number for reproducibility
     filenum_Path = experiment_json_DR / Path(library) / Path("filenumber.txt")
@@ -216,7 +220,7 @@ def download_and_subsample_fastq_files(experiment_json):
         # Directory of the fastq files
         fastq_files_dir = Path(experiment_json).parent / Path(str(library))
 
-        # Process if fastq file (This will work for paired end too, as the seed will be saved to file)
+        # Process if fastq file (This will work for paired end too, as the seed will be saved to files folder)
         for file in fastq_files_dir.iterdir():
             if file.suffix == ".gz":
                 process_fastqgz_file(file)
