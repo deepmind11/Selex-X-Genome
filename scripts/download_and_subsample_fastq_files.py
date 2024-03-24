@@ -9,6 +9,7 @@ from pathlib import Path
 
 import requests
 
+# ! path.stem is not usefule if there are multiple dots in the filename. Makes things very confusing.
 
 def process_fastqgz_file(fastq_file_path, size=2 * (10**6)):
     """
