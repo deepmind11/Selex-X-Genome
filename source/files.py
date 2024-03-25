@@ -1,9 +1,12 @@
+import sys
 from pathlib import Path
 
 import requests
 
-from .base import ENCODE_Object
-from .disk_files import PE_Fastq, SE_Fastq
+sys.path.append("/Users/hgz/Documents/researchHBLab/Projects/Selex-X-Genome/source")
+
+from base import ENCODE_Object
+from disk_files import PE_Fastq, SE_Fastq
 
 
 class SE_File(ENCODE_Object):
@@ -21,9 +24,9 @@ class SE_File(ENCODE_Object):
         href,
         run_type,  # This has two optional parameters pe or se
         paired_end=None,  # Will be none for SE (Assert this)
-        paired_with=None,  # WILL be none for SE (Assert this)
+        paired_with: str = None,  # WILL be none for SE (Assert this)
     ):
-        self.accession = accession
+        super().__init__(accession)
         self.read_count = read_count
         self.file_format = file_format
         self.no_file_available = no_file_available
@@ -35,10 +38,28 @@ class SE_File(ENCODE_Object):
         self.paired_end = paired_end
         self.paired_with = paired_with
 
-        # file_to_download["paired_with"][7:-1]
+        # Assert
+        if self.run_type == "single-ended":
+            assert self.paired_end is None and self.paired_with is None
+        else:
+            assert self.paired_end is not None and self.paired_with is not None
 
-        # How do positional and optional arguments work in python
-        # A constructor method that creates a encode frile from the dict returned by REST API
+    @classmethod
+    def create_from_ENCODE_dict(cls, file_dict: dict):
+
+        return SE_File(
+            file_dict.get("accession"),
+            file_dict.get("read_count"),
+            file_dict.get("file_format"),
+            file_dict.get("no_file_available"),
+            file_dict.get("platform", {}).get("term_name"),
+            file_dict.get("read_length"),
+            file_dict.get("replicate", {}).get("library")[11:-1],
+            file_dict.get("href"),
+            file_dict.get("run_type"),
+            file_dict.get("paired_end", None),
+            file_dict.get("paired_with", None),
+        )
 
     def download(self, download_dr: Path):
         """Download the file from ENCODE server to the specified directory."""
@@ -53,7 +74,9 @@ class SE_File(ENCODE_Object):
             return SE_Fastq(filepath)
 
         # Downloading the file in chunks
-        response = requests.get(self.href, stream=True)
+        response = requests.get(
+            "https://www.encodeproject.org" + self.href, stream=True
+        )
         with filepath.open(mode="wb") as file:
             for chunk in response.iter_content(chunk_size=1024 * 1024):
                 file.write(chunk)
@@ -70,27 +93,10 @@ class PE_File(ENCODE_Object):
 
     # file_to_download["paired_with"][7:-1]
 
-    # How do positional and optional arguments work in python
-    # A constructor method that creates a encode frile from the dict returned by REST API
-
-    # Order does not matter as long as the pairs are in the same folder
+    # R1 and R2 are commutative
     def download(self, download_dr: Path):
         """Download the pe files from ENCODE server to the specified directory."""
         r1_fastq = self.r1.download(download_dr)
         r2_fastq = self.r2.download(download_dr)
 
         return PE_Fastq(r1_fastq, r2_fastq)
-
-
-#     'accession', str
-# 2. 'read_count', int **Verify its over 2 million**
-# 3. 'file_format', str **Super Important**
-# 4. 'no_file_available', bool
-# 5. 'platform', dict
-# 6. 'read_length', int
-
-# 8.
-# 9. ['replicate']['library'] **Super Important**
-# 10. 'href', str   **This is the downlaod link**
-
-# 13. ['run_type'] **Important to distinguish b

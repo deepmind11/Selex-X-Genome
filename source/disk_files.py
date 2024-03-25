@@ -1,24 +1,26 @@
 import subprocess
+import sys
 from pathlib import Path
 
-from .files import File
+sys.path.append("/Users/hgz/Documents/researchHBLab/Projects/Selex-X-Genome/source")
+
+from base import DiskFile
 
 
-class SE_Fastq:
+class SE_Fastq(DiskFile):
     """Class for SE fastq files on disk"""
 
     def __init__(self, file_path: Path = None) -> None:
-        self.file_path = file_path
-
-    def delete(self) -> None:
-        """Deletes the fastq file from disk."""
-        if self.file_path is not None:
-            self.file_path.unlink()
-            self.file_path = None
+        super().__init__(file_path)
 
     def subsample(self, seed=42, size=2000000):  # For now let's keep seed 42
         """Returns subsampled fastq object"""
 
+        # Check if file exists
+        if not self.file_path.exists():
+            raise FileNotFoundError(f"File {self.file_path} does not exist.")
+
+        # Create path for subsampled fastq
         subsampled_fastq_file = self.file_path.parent / Path(
             self.file_path.name[:-6] + "_subsampled.fq"
         )

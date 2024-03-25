@@ -1,5 +1,10 @@
-from .base import ENCODE_Object
-from .files import PE_File, SE_File
+import sys
+
+sys.path.append("/Users/hgz/Documents/researchHBLab/Projects/Selex-X-Genome/source")
+
+from base import ENCODE_Object
+from experiment import Experiment
+from files import PE_File, SE_File
 
 
 class Library(ENCODE_Object):
@@ -11,29 +16,60 @@ class Library(ENCODE_Object):
         antibody,
         technical_replicate_number,
         biological_replicate_number,
-        experiment,
+        experiment: str,
         biosample,
-        files: PE_File | SE_File,
+        run_type,
+        files: list[dict],  # file dicts belonging to this library
     ):
-        self.accession = accession
+        super().__init__(accession)
         self.antibody = antibody
         self.technical_replicate_number = technical_replicate_number
         self.biological_replicate_number = biological_replicate_number
         self.experiment = experiment
         self.biosample = biosample
+        self.run_type = run_type
         self.files = files
 
     # Constructor method from 'replicate' object and list of files for exp
     # Some attributes i need to set with the init method, but then other attributes I want to set by calling
     # For example self.files .
 
-    def create_files(self) -> list[PE_File | SE_File]:
-        return
+    @classmethod
+    def create_from_ENCODE_dict(cls, lib_dict: dict, run_type, lib_files: list[dict]):
+        """Create a Library object from a dictionary"""
+        return Library(
+            lib_dict.get("library", {}).get("accession"),
+            lib_dict.get("antibody", {}).get("accession"),
+            lib_dict.get("technical_replicate_number"),
+            lib_dict.get("biological_replicate_number"),
+            lib_dict.get("experiment")[13:-1],
+            lib_dict.get("library", {}).get("biosample", {}).get("accession"),
+            run_type,
+            lib_files,
+        )
 
+    def get_Files(self) -> list[PE_File | SE_File]:
 
-# ('antibody', dict),
-#  ('biological_replicate_number', int),
-#  ('technical_replicate_number', int),
-#  ('experiment', str),
-#  ['library']['biosample'] # Info about the biosample.
-#  list of files (files attribute.)
+        if self.run_type == "single-ended":
+            return [SE_File.create_from_ENCODE_dict(file) for file in self.files]
+        elif self.run_type == "paired-ended":
+            # Get a list of tuples, each containing a pair
+            # ! Can this be done more elegantly
+            files = self.files.copy()
+            pe_files = []
+            while len(files) != 0:
+                r1 = files[0]
+                files.remove(r1)
+                for file in files:
+                    if file["accession"] == r1["paired_with"]:
+                        r2 = file
+                        files.remove(file)
+                        break
+                pe_files.append(
+                    PE_File(
+                        SE_File.create_from_ENCODE_dict(r1),
+                        SE_File.create_from_ENCODE_dict(r2),
+                    )
+                )
+
+            return pe_files
