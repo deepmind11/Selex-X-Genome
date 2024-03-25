@@ -10,3 +10,6 @@ class ENCODE_Object:
     def get_url(self):
         """Returns the url for the ENCODE object"""
         return f"https://www.encodeproject.org/{self.accession}"
+    
+
+    
