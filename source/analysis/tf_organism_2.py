@@ -22,7 +22,7 @@ def get_fasta(control: Control) -> list[Path]:
     """Returns a list of paths to all the fasta files"""
 
     control_dr = Path(
-        f"/burg/hblab/users/hg2604/Projects/OOP/Selex-X-Genome/data/Control/{control.accession}"
+        f"/burg/hblab/users/hg2604/Projects/Selex-X-Genome/data/Control/{control.accession}"
     )
     return list(control_dr.rglob("*.fasta"))
 

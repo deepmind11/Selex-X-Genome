@@ -62,7 +62,7 @@ def process_controls(controls: list[Control]):
             if Path(f"/burg/hblab/users/hg2604/Projects/Selex-X-Genome/data/Control/{control.accession}").exists():
                 continue
             else:
-            # Library is uniquely identified by a technical and biological replicate #
+                # Library is uniquely identified by a technical and biological replicate
                 for library in libraries:
                     process_library(library, Path(f'/burg/hblab/users/hg2604/Projects/Selex-X-Genome/data/Control/{control.accession}/{library.accession}'))
                     

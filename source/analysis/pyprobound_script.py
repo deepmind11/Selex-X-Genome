@@ -27,8 +27,6 @@ alphabet = pyprobound.alphabets.DNA()
 
 
 # In[3]:
-
-
 dataframe = pd.read_csv(
     count_table_path,
     header=None,
@@ -38,14 +36,10 @@ dataframe = pd.read_csv(
 
 
 # In[4]:
-
-
 count_table = pyprobound.CountTable(dataframe, alphabet, zero_pad=True)
 
 
 # In[6]:
-
-
 nonspecific = pyprobound.layers.NonSpecific(alphabet=alphabet, name="NS")
 psams = [
     pyprobound.layers.PSAM(
@@ -53,8 +47,6 @@ psams = [
         kernel_size=18,
         seed=["---CGCCMYCTAGTGG--"],
         name="CTCF",
-        shift_footprint_heuristic=True,
-        increment_footprint=True,
     )
 ]
 

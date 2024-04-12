@@ -1,0 +1,10 @@
+#!/bin/bash
+#SBATCH --job-name=PSAM_df
+#SBATCH --output=/burg/home/hg2604/hblab/Projects/Selex-X-Genome/one_off_scripts/PSAM_df.out
+#SBATCH --error=/burg/home/hg2604/hblab/Projects/Selex-X-Genome/one_off_scripts/PSAM_df.err
+#SBATCH -c 32
+#SBATCH --mem-per-cpu=5G
+#SBATCH --account=hblab
+#SBATCH -t 5:59:00
+
+python /burg/home/hg2604/hblab/Projects/Selex-X-Genome/one_off_scripts/psam_df.py
