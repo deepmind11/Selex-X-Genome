@@ -1,4 +1,4 @@
-from ENCODE.base import ENCODE_Object
+from ENCODE.base import ENCODE_Object, RunType
 from ENCODE.files import PE_File, SE_File
 
 
@@ -7,13 +7,13 @@ class Library(ENCODE_Object):
 
     def __init__(
         self,
-        accession,
-        antibody,
-        technical_replicate_number,
-        biological_replicate_number,
+        accession: str,
+        antibody: str,
+        technical_replicate_number: int,
+        biological_replicate_number: int,
         experiment: str,
-        biosample,
-        run_type,
+        biosample: str,
+        run_type: RunType,
         files: list[dict],  # file dicts belonging to this library
     ):
         super().__init__(accession)
@@ -30,7 +30,9 @@ class Library(ENCODE_Object):
     # For example self.files .
 
     @classmethod
-    def create_from_ENCODE_dict(cls, lib_dict: dict, run_type, lib_files: list[dict]):
+    def create_from_ENCODE_dict(
+        cls, lib_dict: dict, run_type: RunType, lib_files: list[dict]
+    ):
         """Create a Library object from a dictionary"""
         return Library(
             lib_dict.get("library", {}).get("accession"),
@@ -43,11 +45,11 @@ class Library(ENCODE_Object):
             lib_files,
         )
 
-    def get_Files(self):
+    def get_Files(self) -> list[SE_File] | list[PE_File]:
 
-        if self.run_type == "single-ended":
+        if self.run_type == RunType.SE:
             return [SE_File.create_from_ENCODE_dict(file) for file in self.files]
-        elif self.run_type == "paired-ended":
+        elif self.run_type == RunType.PE:
             # Get a list of tuples, each containing a pair
             # ! Can this be done more elegantly
             files = self.files.copy()

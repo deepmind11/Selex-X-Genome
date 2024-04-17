@@ -2,7 +2,7 @@ from pathlib import Path
 
 import requests
 from diskfiles.fastq import PE_Fastq, SE_Fastq
-from ENCODE.base import ENCODE_Object
+from ENCODE.base import ENCODE_Object, RunType
 
 
 class SE_File(ENCODE_Object):
@@ -10,15 +10,15 @@ class SE_File(ENCODE_Object):
 
     def __init__(
         self,
-        accession,
-        read_count,
-        file_format,
+        accession: str,
+        read_count: int,
+        file_format: str,
         no_file_available: bool,
-        platform,
-        read_length,
-        library,  # Belongs to
-        href,
-        run_type,  # This has two optional parameters pe or se
+        platform: str,
+        read_length: int,
+        library: str,  # Belongs to
+        href: str,
+        run_type: RunType,  # This has two optional parameters pe or se
         paired_end=None,  # Will be none for SE (Assert this)
         paired_with: str = None,  # WILL be none for SE (Assert this)
     ):
@@ -35,14 +35,14 @@ class SE_File(ENCODE_Object):
         self.paired_with = paired_with
 
         # Assert
-        if self.run_type == "single-ended":
+        if self.run_type == RunType.SE:
             assert self.paired_end is None and self.paired_with is None
         else:
             assert self.paired_end is not None and self.paired_with is not None
 
     @classmethod
     def create_from_ENCODE_dict(cls, file_dict: dict):
-
+        "Create ENCODE File object from a dictionary(part of expr_dict)"
         return SE_File(
             file_dict.get("accession"),
             file_dict.get("read_count"),
@@ -57,7 +57,7 @@ class SE_File(ENCODE_Object):
             file_dict.get("paired_with", None),
         )
 
-    def download(self, download_dr: Path):
+    def download(self, download_dr: Path) -> SE_Fastq:
         """Download the file from ENCODE server to the specified directory."""
 
         # Constructing the filnames and filepaths
@@ -90,7 +90,7 @@ class PE_File(ENCODE_Object):
     # file_to_download["paired_with"][7:-1]
 
     # R1 and R2 are commutative
-    def download(self, download_dr: Path):
+    def download(self, download_dr: Path) -> PE_Fastq:
         """Download the pe files from ENCODE server to the specified directory."""
         r1_fastq = self.r1.download(download_dr)
         r2_fastq = self.r2.download(download_dr)

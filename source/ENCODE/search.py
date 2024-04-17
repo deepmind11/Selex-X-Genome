@@ -3,7 +3,7 @@ from ENCODE.experiment import TFChipSeq
 
 
 class EncodeSearch:
-    """Class for searching for ENCODE experiments"""
+    """Class for searching for ENCODE TF ChIPseq experiments"""
 
     def __init__(self, tf, organism, limit="all", search_result: list[dict] = None):
         self.tf = tf
