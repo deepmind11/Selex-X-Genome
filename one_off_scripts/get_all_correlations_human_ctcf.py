@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 sys.path.append("/burg/hblab/users/hg2604/Projects/OOP/Selex-X-Genome/source")
-from source.diskfiles.slurmjob import Slurmjob
+from utils.slurmjob import Slurmjob
 
 list_of_correlations = list(
     Path("/burg/home/hg2604/hblab/Projects/OOP/Selex-X-Genome/data/CTCF_Human").rglob(

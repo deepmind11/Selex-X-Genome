@@ -1,9 +1,18 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from motifs.motif import Mononucleotide
+
+import sqlite3
 import subprocess
 from pathlib import Path
 
 import pandas as pd
 from diskfiles.base import DiskFile
-from motifs.motif import Mononucleotide
+
+# Add fit porbound method for the count table
 
 
 class CountTable(DiskFile):
@@ -88,6 +97,7 @@ class CountTable(DiskFile):
 
         return bin_df
 
+    # ! motif can be a general motif class
     def score(self, motif: Mononucleotide):
         """Scores a motif against the count table"""
         count_table_df = self.get_pandas_df()
@@ -97,3 +107,46 @@ class CountTable(DiskFile):
         bin_df = CountTable.bin_count_table(count_table_df)
 
         return bin_df.iloc[0,].to_dict()
+
+    def get_probe_count(self):
+        "Returns Total Probe Count, Probes in R0, and Probes in R1."
+        df = self.get_pandas_df()
+        return (df.shape[0], df[df["r0"] > 0].shape[0], df[df["r1"] > 0].shape[0])
+
+    def update_database(self):
+        "Adds information to the Selex_X_Genome.db database"
+        # Connect to the database
+        with sqlite3.connect(
+            "/burg/home/hg2604/hblab/Projects/Selex-X-Genome/database/Selex_X_Genome.db"
+        ) as conn:
+            cursor = conn.cursor()
+
+            # Get the r1_file_id from the files table
+            try:
+                cursor.execute(
+                    """
+                    SELECT "id" FROM "files" WHERE "accession" =?
+                    """,
+                    (self.file_path.name[:11]),
+                )
+                r1_file_id = cursor.fetchone()[0]
+            except:
+                raise ValueError("Could not find file in Database")
+
+            probe_count, r0_count, r1_count = self.get_probe_count()
+            # Value to be added to DB
+            count_table = [(r1_file_id, probe_count, r0_count, r1_count)]
+            # Update DB
+            try:
+                cursor.executemany(
+                    """
+                INSERT INTO "count_tables" ("r1_file", "probe_count", "r0_count", "r1_count") VALUES (?, ?, ?, ?)
+                """,
+                    count_table,
+                )
+                conn.commit()
+            except:
+                pass
+
+    def fit_probound(self):
+        pass

@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from pathlib import Path
 
-from diskfiles.slurmjob import Slurmjob
+from utils.slurmjob import Slurmjob
 
 if __name__ == "__main__":
 

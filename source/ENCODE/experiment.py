@@ -1,3 +1,5 @@
+import sqlite3
+
 from ENCODE.base import Experiment, FetchExperimentDataFailure, RunType
 from ENCODE.library import Library
 
@@ -27,7 +29,7 @@ class TFChipSeq(Experiment):
     def __init__(self, accession: str, expr_data: dict = None):
         super().__init__(accession, expr_data)
         self.fetchData()
-
+        self.control = False
         if self.expr_data is None:
             raise FetchExperimentDataFailure
 
@@ -38,7 +40,9 @@ class TFChipSeq(Experiment):
         elif len(self.expr_data["possible_controls"]) > 1:
             raise MoreThanOneControl
         else:
-            return Control(self.expr_data["possible_controls"][0]["accession"])
+            return Control(
+                self.expr_data["possible_controls"][0]["accession"], self.accession
+            )
 
     @staticmethod
     def get_run_type(expr_data: dict) -> RunType:
@@ -81,6 +85,7 @@ class TFChipSeq(Experiment):
                     self.expr_data["replicates"][i],
                     run_type,
                     library_fastq_files[libraries[i]],
+                    self.control,
                 )
             )
         return Libraries
@@ -98,18 +103,56 @@ class TFChipSeq(Experiment):
                 "developmental_slims"
             ),
             "system_slims": self.expr_data.get("biosample_ontology").get(
-                "central nervous system"
+                "system_slims"
             ),
             "organ_slims": self.expr_data.get("biosample_ontology").get("organ_slims"),
             "cell_slims": self.expr_data.get("biosample_ontology").get("cell_slims"),
         }
 
+    def update_database(self):
+        "Adds information to the Selex_X_Genome.db database"
+        # Connect to the database
+        with sqlite3.connect(
+            "/burg/home/hg2604/hblab/Projects/Selex-X-Genome/database/Selex_X_Genome.db"
+        ) as conn:
+            cursor = conn.cursor()
+
+            meta_data = self.get_other_meta_data()
+
+            try:
+                experiment = [
+                    (
+                        self.accession,
+                        "n",
+                        meta_data.get("life_stage_age"),
+                        meta_data.get("perturbed"),
+                        meta_data.get("lab"),
+                        meta_data.get("biosample_class"),
+                        ",".join(meta_data.get("developmental_slims", [])),
+                        ",".join(meta_data.get("system_slims", [])),
+                        ",".join(meta_data.get("organ_slims", [])),
+                        ",".join(meta_data.get("cell_slims", [])),
+                    )
+                ]
+                cursor.executemany(
+                    """
+                INSERT INTO "experiments" ("accession", "control", "life_stage_age", "perturbed", "lab", "biosample_class", "developmental_slims", "system_slims", "organ_slims", "cell_slims") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                    experiment,
+                )
+                conn.commit()
+            except sqlite3.IntegrityError:
+                pass
+            except Exception as e:
+                print("Error:", e)
+
 
 class Control(Experiment):
-    def __init__(self, accession: str, expr_data: dict = None):
+    def __init__(self, accession: str, experiment: str, expr_data: dict = None):
         super().__init__(accession, expr_data)
+        self.experiment = experiment
         self.fetchData()
-
+        self.control = True
         if self.expr_data is None:
             raise FetchExperimentDataFailure
 
@@ -154,6 +197,27 @@ class Control(Experiment):
                     self.expr_data["replicates"][i],
                     run_type,
                     library_fastq_files[libraries[i]],
+                    self.control,
                 )
             )
         return Libraries
+
+    def update_database(self):
+        "Adds information to the Selex_X_Genome.db database"
+        # Connect to the database
+        with sqlite3.connect(
+            "/burg/home/hg2604/hblab/Projects/Selex-X-Genome/database/Selex_X_Genome.db"
+        ) as conn:
+            cursor = conn.cursor()
+
+            try:
+                experiment = [(self.accession, "y")]
+                cursor.executemany(
+                    """
+                INSERT INTO "experiments" ("accession", "control") VALUES (?, ?)
+                """,
+                    experiment,
+                )
+                conn.commit()
+            except:
+                pass

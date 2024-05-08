@@ -2,16 +2,35 @@ import requests
 from ENCODE.experiment import TFChipSeq
 
 
+class EncodeSearchError(Exception):
+    pass
+
+
 class EncodeSearch:
     """Class for searching for ENCODE TF ChIPseq experiments"""
 
-    def __init__(self, tf, organism, limit="all", search_result: list[dict] = None):
+    tax_id_dict = {
+        7227: "Drosophila+melanogaster",
+        9606: "Homo+sapiens",
+        10090: "Mus+musculus",
+        94885: "Pantherophis+guttatus",
+    }
+
+    def __init__(
+        self,
+        tf: str,
+        organism: str,
+        limit: str = "all",
+    ):
         self.tf = tf
         self.organism = organism
         self.limit = limit
-        self.search_result = search_result
+        try:
+            self.search_result = self.search()
+        except EncodeSearchError:
+            self.search_result = None
 
-    def search(self):
+    def search(self) -> dict:
         # Force return from the server in JSON format
         headers = {"accept": "application/json"}
 
@@ -24,16 +43,22 @@ class EncodeSearch:
         # GET the search result
         response = requests.get(url, headers=headers)
 
+        if response.status_code != 200:
+            raise EncodeSearchError(f"Search error for {self.tf} and {self.organism}")
+
         # Extract the JSON response as a python dictionary
         self.search_result = response.json()
-        self.search_result = self.search_result["@graph"]
+        self.search_result = self.search_result.get("@graph")
+
+        if self.search_result is None:
+            raise EncodeSearchError(f"No hits for {self.tf} and {self.organism}")
 
         return self.search_result
 
     def get_experiments(self):
         """Returns List of TF ChipSeq Experiments"""
         if self.search_result is None:
-            raise Exception("Fetch data first")
+            raise EncodeSearchError
         else:
             experiments = list(
                 [
@@ -42,3 +67,15 @@ class EncodeSearch:
                 ]
             )
             return [TFChipSeq(experiment) for experiment in experiments]
+
+    @classmethod
+    def search_using_MOTIFCENTRAL_json(cls, motif: dict, limit: str = "all"):
+        """Create ENCODE search object from an element of MOTIFCENTRAL dict"""
+        # Get the organism
+        tax_id = motif["metadata"]["factors"][0].get("tax_id")
+        organism = EncodeSearch.tax_id_dict.get(tax_id)
+        # Get the TF
+        tf = motif["metadata"]["factors"][0].get("gene_symbol")
+        tf = tf.upper()
+        # Get the search object.
+        return EncodeSearch(tf, organism, limit)
