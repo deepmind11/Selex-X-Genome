@@ -1,13 +1,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from diskfiles.countTables import CountTable
-    from ENCODE.base import RunType
 
 from diskfiles.base import DiskFile
+from diskfiles.countTables import CountTable
+from ENCODE.base import RunType
 from ENCODE.experiment import TFChipSeq
 
 
@@ -16,6 +13,10 @@ class CantBuildTableFromControl(Exception):
 
 
 class AmbiguousControls(Exception):
+    pass
+
+
+class NoControlsFound(Exception):
     pass
 
 
@@ -72,13 +73,16 @@ class SE_Fasta(DiskFile):
             exp = TFChipSeq(self.experiment)
             control = exp.get_controls()
             control_libs = control.get_libraries()
-            # Filtering the libraries based on Biosample
+            # Filtering the libraries based on Biosample # ! This doesnt work all the time
             control_libs = list(
                 filter(
                     lambda x: (x.biosample == self.biosample),
                     control_libs,
                 )
             )
+            if len(control_libs) == 0:
+                # Incase all the libraries got filtered out in the previous step.
+                control_libs = control.get_libraries()
             # If more than one control lib then do further filtering based on technical replicate number
             if len(control_libs) > 1:
                 control_libs = list(
@@ -91,8 +95,10 @@ class SE_Fasta(DiskFile):
                     )
                 )
             # If length controls libs not equal 1, raise error
-            if len(control_libs) != 1:
-                raise AmbiguousControls
+            # if len(control_libs) != 1:
+            #     raise AmbiguousControls(f"Number of controls is {len(control_libs)}")
+            if len(control_libs) == 0:
+                raise NoControlsFound()
             # Get the files for the control lib
             control_file = control_libs[0].get_Files()[0]
             # Path to the hypothetical fasta file
@@ -105,6 +111,7 @@ class SE_Fasta(DiskFile):
                 count_table = CountTable.create_from_fasta(
                     r0, r1, cnt_tbl_path
                 )  # Returns if already exists
+                count_table.processTable()
                 count_table.zip()
                 return count_table
             else:
@@ -117,5 +124,6 @@ class SE_Fasta(DiskFile):
                 assert r0 == control_fasta.file_path
                 # Returning the count table
                 count_table = CountTable.create_from_fasta(r0, r1, cnt_tbl_path)
+                count_table.processTable()
                 count_table.zip()
                 return count_table

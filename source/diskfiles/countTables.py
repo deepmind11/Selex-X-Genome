@@ -12,9 +12,8 @@ from pathlib import Path
 import pandas as pd
 from diskfiles.base import DiskFile
 
+
 # Add fit porbound method for the count table
-
-
 class CountTable(DiskFile):
     """Class for CountTable (.tsv file) on disk."""
 
@@ -106,6 +105,58 @@ class CountTable(DiskFile):
 
         bin_df = CountTable.bin_count_table(count_table_df)
 
+        # Add the score to Database
+        with sqlite3.connect(
+            "/burg/home/hg2604/hblab/Projects/Selex-X-Genome/database/Selex_X_Genome.db"
+        ) as conn:
+            cursor = conn.cursor()
+
+            # Get the count_table_id from the counttables table.
+            try:
+                cursor.execute(
+                    """
+                    SELECT "id" FROM "count_tables" WHERE "r1_file" IN (SELECT "id" FROM "files" WHERE "accession" = ?)
+                    """,
+                    (self.file_path.name[:11],),
+                )
+                count_table_id = cursor.fetchone()[0]
+            except:
+                raise ValueError("Could not find file in Database")
+
+            # Update DB
+            type1 = "Mononucleotide"
+            tf = motif.tf
+            organism = motif.organism
+            count_table_id = count_table_id
+            top_row = bin_df.iloc[0,].to_dict()
+            score = top_row["avg_score"]
+            r0_count = top_row["r0_count"]
+            r1_count = top_row["r1_count"]
+            enrichment = top_row["enrichment"]
+            row = (
+                type1,
+                tf,
+                organism,
+                count_table_id,
+                score,
+                r0_count,
+                r1_count,
+                enrichment,
+            )
+
+            try:
+                cursor.executemany(
+                    """
+                INSERT INTO "motif" ("type", "tf", "organism", "count_table_id", "score", "r0_count", "r1_count", "enrichment") VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                    [row],
+                )
+                conn.commit()
+            except sqlite3.IntegrityError:
+                pass
+            except Exception as e:
+                print("Error:", e)
+
         return bin_df.iloc[0,].to_dict()
 
     def get_probe_count(self):
@@ -125,9 +176,9 @@ class CountTable(DiskFile):
             try:
                 cursor.execute(
                     """
-                    SELECT "id" FROM "files" WHERE "accession" =?
+                    SELECT "id" FROM "files" WHERE "accession" = ?
                     """,
-                    (self.file_path.name[:11]),
+                    (self.file_path.name[:11],),
                 )
                 r1_file_id = cursor.fetchone()[0]
             except:
@@ -145,8 +196,10 @@ class CountTable(DiskFile):
                     count_table,
                 )
                 conn.commit()
-            except:
+            except sqlite3.IntegrityError:
                 pass
+            except Exception as e:
+                print("Error:", e)
 
     def fit_probound(self):
         pass

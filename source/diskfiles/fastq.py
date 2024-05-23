@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from diskfiles.base import DiskFile
-from diskfiles.fasta import SE_Fasta
 from ENCODE.base import RunType
 from utils.slurmjob import Slurmjob
+
+if TYPE_CHECKING:
+    from diskfiles.fasta import SE_Fasta
 
 # File size (number of reads): implement methods
 
@@ -120,6 +123,8 @@ class SE_Fastq(DiskFile):
         ),
     ) -> SE_Fasta:
         """Tranfrom fastq to fasta for now. FileAcc.fasta"""
+        from diskfiles.fasta import SE_Fasta
+
         # If exists then return
         fasta_file = self.file_path.parent / Path(self.accession + ".fasta")
         if fasta_file.exists():

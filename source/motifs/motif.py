@@ -26,7 +26,7 @@ class Mononucleotide(Motif):
         self.psam = psam
 
     @classmethod
-    def create_from_motif_central(cls, motifcentral: dict):  # ! Make this more robust
+    def create_from_motif_central(cls, motifcentral: dict):
         """Instantiate mononucleotide motif from motifcentral model json"""
         tf = motifcentral["metadata"]["factors"][0]["gene_symbol"]
         organism = motifcentral["metadata"]["factors"][0]["tax_id"]
@@ -39,6 +39,20 @@ class Mononucleotide(Motif):
 
         score = 0
         for i, base in enumerate(seq):
+            match base:
+                case "A":
+                    score += numpy_motif[0, i]
+                case "C":
+                    score += numpy_motif[1, i]
+                case "G":
+                    score += numpy_motif[2, i]
+                case "T":
+                    score += numpy_motif[3, i]
+
+        # Reverse complement window and score
+        rev_comp_dict = {"A": "T", "C": "G", "G": "C", "T": "A"}
+        rev_comp_seq = "".join([rev_comp_dict[base] for base in seq[::-1]])
+        for i, base in enumerate(rev_comp_seq):
             match base:
                 case "A":
                     score += numpy_motif[0, i]
@@ -93,7 +107,7 @@ class Mononucleotide(Motif):
             job_path = Path(
                 f'/burg/home/hg2604/hblab/Projects/Selex-X-Genome/data/{searchResult.tf}_{searchResult.organism.replace("+","_")}/{experiment.accession}/{searchResult.tf}_Score.job'
             )
-            job_path
+
             slurmjob = Slurmjob(
                 file_path=job_path,
                 job_name=f'Score_{searchResult.tf}_{searchResult.organism.replace("+","_")}',
@@ -104,7 +118,8 @@ class Mononucleotide(Motif):
                     searchResult.tf,
                     searchResult.organism,
                     experiment.accession,
-                    ",".join(PSAM),
+                    "--psam",
+                    " ".join(PSAM),
                 ),
                 output=f'Score_{searchResult.tf}_{searchResult.organism.replace("+","_")}',
                 cores=4,

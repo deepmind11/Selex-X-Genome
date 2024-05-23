@@ -31,4 +31,5 @@ rm "$currentdr"/"$stemname".bed
 rm "$currentdr"/pr"$stemname".bed
 rm "$currentdr"/"$stemname".bam
 rm "$currentdr"/"$stemname"_sorted.bam
-rm "$fastq_file"
+rm "$currentdr"/"$stemname".fastq.gz
+#rm "$fastq_file"
