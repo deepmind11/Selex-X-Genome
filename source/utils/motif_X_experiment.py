@@ -15,6 +15,7 @@ if __name__ == "__main__":
     parser.add_argument("TF", type=str)
     parser.add_argument("organism", type=str)
     parser.add_argument("experiment", type=str)
+    parser.add_argument("data_path", type=str)
     parser.add_argument(
         "--psam",
         nargs="*",
@@ -25,8 +26,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     psam = args.psam
-    # psam = list([int(x) for x in psam])
-
+    data_path = args.data_path
     motif = Mononucleotide(args.TF, args.organism, psam)
 
     experiment = TFChipSeq(args.experiment)
@@ -38,11 +38,11 @@ if __name__ == "__main__":
         file.update_database()  # Update DB
         # Check whether counttable exists
         if Path(
-            f'/burg/home/hg2604/hblab/Projects/Selex-X-Genome/data/{args.TF}_{args.organism.replace("+","_")}/{experiment.accession}/{library.accession}/{file.accession}.tsv.gz'
+            f'{data_path}{args.TF}_{args.organism.replace("+","_")}/{experiment.accession}/{library.accession}/{file.accession}.tsv.gz'
         ).exists():
             count_table = CountTable(
                 Path(
-                    f'/burg/home/hg2604/hblab/Projects/Selex-X-Genome/data/{args.TF}_{args.organism.replace("+","_")}/{experiment.accession}/{library.accession}/{file.accession}.tsv.gz'
+                    f'{data_path}{args.TF}_{args.organism.replace("+","_")}/{experiment.accession}/{library.accession}/{file.accession}.tsv.gz'
                 )
             )
             count_table.update_database()
@@ -50,12 +50,12 @@ if __name__ == "__main__":
         else:
             fastq = file.download(
                 Path(
-                    f'/burg/home/hg2604/hblab/Projects/Selex-X-Genome/data/{args.TF}_{args.organism.replace("+","_")}/{experiment.accession}/{library.accession}'
+                    f'{data_path}{args.TF}_{args.organism.replace("+","_")}/{experiment.accession}/{library.accession}'
                 )
             )
             subsampled_fq = fastq.subsample(size=1000000)
             fasta = subsampled_fq.transform_to_fasta()
-            count_table = fasta.build_count_table()
+            count_table = fasta.build_count_table(data_path)
             count_table.processTable()
             count_table.update_database()
             count_table.score(motif)

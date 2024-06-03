@@ -61,7 +61,7 @@ class SE_Fasta(DiskFile):
         else:
             assert self.paired_end is not None and self.paired_with is not None
 
-    def build_count_table(self) -> CountTable:
+    def build_count_table(self, data_path: str) -> CountTable:
         """Finds the matching control and builds the count table.(Returns Zipped)"""
         # Establish the R0 and R1 Fasta files
         if self.control:
@@ -103,7 +103,7 @@ class SE_Fasta(DiskFile):
             control_file = control_libs[0].get_Files()[0]
             # Path to the hypothetical fasta file
             r0 = Path(
-                f"/burg/home/hg2604/hblab/Projects/Selex-X-Genome/data/Control/{control.accession}/{control_libs[0].accession}/{control_file.accession}.fasta"
+                f"{data_path}Control/{control.accession}/{control_libs[0].accession}/{control_file.accession}.fasta"
             )
             # Creating the count table.
             cnt_tbl_path = self.file_path.parent / Path(f"{self.accession}.tsv")

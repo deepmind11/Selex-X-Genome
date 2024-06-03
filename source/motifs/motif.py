@@ -95,7 +95,11 @@ class Mononucleotide(Motif):
 
         return
 
-    def motif_X_TF(self, searchResult: EncodeSearch):
+    def motif_X_TF(
+        self,
+        searchResult: EncodeSearch,
+        data_path: str = "/burg/home/hg2604/hblab/Projects/Selex-X-Genome/data/",
+    ):
 
         experiments = searchResult.get_experiments()
 
@@ -105,7 +109,7 @@ class Mononucleotide(Motif):
 
             # Create Slurm Job
             job_path = Path(
-                f'/burg/home/hg2604/hblab/Projects/Selex-X-Genome/data/{searchResult.tf}_{searchResult.organism.replace("+","_")}/{experiment.accession}/{searchResult.tf}_Score.job'
+                f'{data_path}{searchResult.tf}_{searchResult.organism.replace("+","_")}/{experiment.accession}/{searchResult.tf}_Score.job'
             )
 
             slurmjob = Slurmjob(
@@ -118,6 +122,7 @@ class Mononucleotide(Motif):
                     searchResult.tf,
                     searchResult.organism,
                     experiment.accession,
+                    data_path,
                     "--psam",
                     " ".join(PSAM),
                 ),
