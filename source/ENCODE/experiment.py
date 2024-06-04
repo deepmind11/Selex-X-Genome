@@ -113,7 +113,7 @@ class TFChipSeq(Experiment):
         "Adds information to the Selex_X_Genome.db database"
         # Connect to the database
         with sqlite3.connect(
-            "/burg/home/hg2604/hblab/Projects/Selex-X-Genome/database/Selex_X_Genome.db"
+            "/burg/hblab/users/hg2604/Projects/Selex-X-Genome/database/Selex_X_Genome.db"
         ) as conn:
             cursor = conn.cursor()
 
@@ -206,7 +206,7 @@ class Control(Experiment):
         "Adds information to the Selex_X_Genome.db database"
         # Connect to the database
         with sqlite3.connect(
-            "/burg/home/hg2604/hblab/Projects/Selex-X-Genome/database/Selex_X_Genome.db"
+            "/burg/hblab/users/hg2604/Projects/Selex-X-Genome/database/Selex_X_Genome.db"
         ) as conn:
             cursor = conn.cursor()
 

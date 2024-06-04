@@ -115,9 +115,8 @@ class Mononucleotide(Motif):
             slurmjob = Slurmjob(
                 file_path=job_path,
                 job_name=f'Score_{searchResult.tf}_{searchResult.organism.replace("+","_")}',
-                job_script=Path(
-                    "/burg/home/hg2604/hblab/Projects/Selex-X-Genome/source/utils/motif_X_experiment.py"
-                ),
+                job_script=Path(__file__).parent.parent
+                / Path("utils/motif_X_experiment.py"),
                 job_params=(
                     searchResult.tf,
                     searchResult.organism,
