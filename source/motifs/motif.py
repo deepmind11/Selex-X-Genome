@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ENCODE.search import EncodeSearch
 
+import math
+
 import numpy as np
 import pandas as pd
 from motifs.base import Motif
@@ -72,7 +74,9 @@ class Mononucleotide(Motif):
 
         score = 0
         for i in range(0, len(seq) - 2):
-            score += Mononucleotide.score_window(numpy_motif, seq[i : i + motif_size])
+            score += math.exp(
+                Mononucleotide.score_window(numpy_motif, seq[i : i + motif_size])
+            )
 
         return score
 
