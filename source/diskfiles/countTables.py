@@ -48,9 +48,7 @@ class CountTable(DiskFile):
 
     def processTable(
         self,
-        script: Path = Path(
-            "/burg/hblab/users/hg2604/Projects/Selex-X-Genome/source/processCntTbl.sh"
-        ),
+        script: Path = Path(__file__).parent.parent / Path("processCntTbl.sh"),
     ):
         """Transforms count table in place, based on the script. Table should not be zipped(assert this). (In place)"""
         if not self.file_path.exists():

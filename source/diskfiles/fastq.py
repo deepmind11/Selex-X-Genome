@@ -118,9 +118,7 @@ class SE_Fastq(DiskFile):
 
     def transform_to_fasta(
         self,
-        transform_script: Path = Path(
-            "/burg/hblab/users/hg2604/Projects/Selex-X-Genome/source/se_processing_template.sh"
-        ),
+        transform_script: Path =  Path(__file__).parent.parent /  Path("se_processing_template.sh"),
     ) -> SE_Fasta:
         """Tranfrom fastq to fasta for now. FileAcc.fasta"""
         from diskfiles.fasta import SE_Fasta
@@ -168,9 +166,7 @@ class SE_Fastq(DiskFile):
 
     def slurm_transform_to_fasta(  # ! Need to implement this properly. Wait for the slurm job to finish.
         self,
-        transform_script: Path = Path(
-            "/burg/hblab/users/hg2604/Projects/Selex-X-Genome/source/se_processing_template.sh"
-        ),
+        transform_script: Path = Path(__file__).parent.parent /  Path("se_processing_template.sh"),
     ) -> SE_Fasta:
         # Create slurm job file
         fasta_file = self.file_path.parent / Path(self.accession + ".fasta")
