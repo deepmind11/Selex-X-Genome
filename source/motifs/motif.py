@@ -70,8 +70,13 @@ class Mononucleotide(Motif):
     def score_seq(self, seq: str):
         # Scores a sequence. Assert sequence lenght > motif lenght
         motif_size = int(len(self.psam) / 4)
-        numpy_motif = np.array(self.psam).reshape(4, motif_size, order="F")
+        mean_adjusted_psam = []
+        for i in range(0, len(self.psam), 4):
+            mean_adjusted_psam += list(np.array(self.psam[i:i+4]) - np.array(self.psam[i:i+4]).mean())
 
+        numpy_motif = np.array(mean_adjusted_psam).reshape(4, motif_size, order="F")
+        
+        
         score = 0
         for i in range(0, len(seq) - 2):
             score += math.exp(
