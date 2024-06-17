@@ -95,7 +95,7 @@ class CountTable(DiskFile):
         return bin_df
 
     # ! motif can be a general motif class
-    def score(self, motif: Mononucleotide):
+    def score(self, motif: Mononucleotide, search_tf: str):
         """Scores a motif against the count table"""
         count_table_df = self.get_pandas_df()
         count_table_df["score"] = count_table_df["seq"].apply(motif.score_seq)
@@ -124,6 +124,7 @@ class CountTable(DiskFile):
             # Update DB
             type1 = "Mononucleotide"
             tf = motif.tf
+            search_tf = search_tf
             organism = motif.organism
             count_table_id = count_table_id
             top_row = bin_df.iloc[0,].to_dict()
@@ -134,6 +135,7 @@ class CountTable(DiskFile):
             row = (
                 type1,
                 tf,
+                search_tf,
                 organism,
                 count_table_id,
                 score,
@@ -145,7 +147,7 @@ class CountTable(DiskFile):
             try:
                 cursor.executemany(
                     """
-                INSERT INTO "motif" ("type", "tf", "organism", "count_table_id", "score", "r0_count", "r1_count", "enrichment") VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO "motif" ("type", "tf", "search_tf", "organism", "count_table_id", "score", "r0_count", "r1_count", "enrichment") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                     [row],
                 )

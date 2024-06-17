@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS "motif" (
     "id" INTEGER,
     "type" TEXT NOT NULL,
     "tf" TEXT NOT NULL,
+    "search_tf" TEXT NOT NULL,
     "organism" TEXT NOT NULL,
     "count_table_id" INTEGER NOT NULL,
     "score" NUMERIC,

@@ -13,6 +13,7 @@ if __name__ == "__main__":
     # Parsing the arguments
     parser = ArgumentParser()
     parser.add_argument("TF", type=str)
+    parser.add_argument("Search_TF", type=str)
     parser.add_argument("organism", type=str)
     parser.add_argument("experiment", type=str)
     parser.add_argument("data_path", type=str)
@@ -27,6 +28,7 @@ if __name__ == "__main__":
 
     psam = args.psam
     data_path = args.data_path
+    search_tf = args.Search_TF
     motif = Mononucleotide(args.TF, args.organism, psam)
 
     experiment = TFChipSeq(args.experiment)
@@ -46,7 +48,7 @@ if __name__ == "__main__":
                 )
             )
             count_table.update_database()
-            count_table.score(motif)
+            count_table.score(motif, search_tf)
         else:
             fastq = file.download(
                 Path(
@@ -58,4 +60,4 @@ if __name__ == "__main__":
             count_table = fasta.build_count_table(data_path)
             count_table.processTable()
             count_table.update_database()
-            count_table.score(motif)
+            count_table.score(motif, search_tf)

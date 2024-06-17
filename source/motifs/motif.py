@@ -72,11 +72,12 @@ class Mononucleotide(Motif):
         motif_size = int(len(self.psam) / 4)
         mean_adjusted_psam = []
         for i in range(0, len(self.psam), 4):
-            mean_adjusted_psam += list(np.array(self.psam[i:i+4]) - np.array(self.psam[i:i+4]).mean())
+            mean_adjusted_psam += list(
+                np.array(self.psam[i : i + 4]) - np.array(self.psam[i : i + 4]).mean()
+            )
 
         numpy_motif = np.array(mean_adjusted_psam).reshape(4, motif_size, order="F")
-        
-        
+
         score = 0
         for i in range(0, len(seq) - 2):
             score += math.exp(
@@ -128,6 +129,7 @@ class Mononucleotide(Motif):
                 / Path("utils/motif_X_experiment.py"),
                 job_params=(
                     searchResult.tf,
+                    self.tf,
                     searchResult.organism,
                     experiment.accession,
                     data_path,
