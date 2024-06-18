@@ -1,0 +1,8 @@
+#!/bin/bash
+#SBATCH --job-name=Score_CTCF_Homo_sapiens
+#SBATCH -c 4
+#SBATCH --mem-per-cpu=5G
+#SBATCH --account=hblab
+#SBATCH -t 8:59:00
+
+python /burg/home/hg2604/hblab/Projects/Selex-X-Genome/enrichment_vs_bin/plot.py $1 $2

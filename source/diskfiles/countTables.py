@@ -9,6 +9,7 @@ import sqlite3
 import subprocess
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pandas as pd
 from diskfiles.base import DiskFile
 
@@ -200,6 +201,28 @@ class CountTable(DiskFile):
                 pass
             except Exception as e:
                 print("Error:", e)
+
+    def plot_enrichment_vs_bin(self, motif: Mononucleotide):
+        count_table_df = self.get_pandas_df()
+        count_table_df["score"] = count_table_df["seq"].apply(motif.score_seq)
+        count_table_df.sort_values(by="score", ascending=False, inplace=True)
+
+        bin_df = CountTable.bin_count_table(count_table_df)
+
+        # Step 2: Prepare the data
+        x = list(range(bin_df.shape[0]))  # Example iterable for the x-axis
+        y = list(bin_df["enrichment"])  # Example iterable for the y-axis
+
+        # Step 3: Create the scatter plot
+        fig, ax = plt.subplots()
+        ax.scatter(x, y)
+
+        # Step 4: Customize the plot
+        ax.set_title("Scatter Plot of Bin Number vs Enrichment")
+        ax.set_xlabel("Bin Number")
+        ax.set_ylabel("Enrichment")
+
+        return fig, ax
 
     def fit_probound(self):
         pass
