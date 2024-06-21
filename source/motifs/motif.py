@@ -119,7 +119,7 @@ class Mononucleotide(Motif):
 
             # Create Slurm Job
             job_path = Path(
-                f'{data_path}{searchResult.tf}_{searchResult.organism.replace("+","_")}/{experiment.accession}/{searchResult.tf}_Score.job'
+                f'{data_path}{searchResult.tf}_{searchResult.organism.replace("+","_")}/{experiment.accession}/{self.tf}_{searchResult.tf}_Score.job'
             )
 
             slurmjob = Slurmjob(

@@ -97,12 +97,67 @@ class CountTable(DiskFile):
 
     # ! motif can be a general motif class
     def score(self, motif: Mononucleotide, search_tf: str):
-        """Scores a motif against the count table"""
+        """Scores a motif against the count table and also generates the enrichment vs bin plot."""
+
+        # Check if the table has already been scored. If so, just exit.
+        with sqlite3.connect(
+            "/burg/hblab/users/hg2604/Projects/Selex-X-Genome/database/Selex_X_Genome.db"
+        ) as conn:
+            cursor = conn.cursor()
+
+            # Get the count_table_id from the counttables table.
+            try:
+                cursor.execute(
+                    """
+                    SELECT "id" FROM "count_tables" WHERE "r1_file" IN (SELECT "id" FROM "files" WHERE "accession" = ?)
+                    """,
+                    (self.file_path.name[:11],),
+                )
+                count_table_id = cursor.fetchone()[0]
+            except:
+                raise ValueError("Could not find count table id in Database")
+
+            try:
+                cursor.execute(
+                    """
+                    SELECT COUNT(*) FROM "motif" WHERE "tf" = ? AND "search_tf" = ? AND "organism" = ? AND "count_table_id" = ?
+                    """,
+                    (
+                        motif.tf,
+                        search_tf,
+                        motif.organism,
+                        self.file_path.name[:11],
+                    ),
+                )
+                count = cursor.fetchone()[0]
+                if count != 0:
+                    return
+            except:
+                raise ValueError("Failed to get count from Database")
+
         count_table_df = self.get_pandas_df()
         count_table_df["score"] = count_table_df["seq"].apply(motif.score_seq)
         count_table_df.sort_values(by="score", ascending=False, inplace=True)
 
         bin_df = CountTable.bin_count_table(count_table_df)
+
+        # Plot enrichment vs bin
+        # Step 2: Prepare the data
+        x = list(range(bin_df.shape[0]))  # Example iterable for the x-axis
+        y = list(bin_df["enrichment"])  # Example iterable for the y-axis
+
+        # Step 3: Create the scatter plot
+        fig, ax = plt.subplots()
+        ax.scatter(x, y)
+
+        # Step 4: Customize the plot
+        ax.set_title(f"{self.tf}_X_{search_tf} for {self.file_path.name[:11]}")
+        ax.set_xlabel("Bin Number")
+        ax.set_ylabel("Enrichment")
+
+        fig.savefig(
+            f"{str(self.file_path.parent)}/{self.file_path.name[:11]}_{self.tf}_X_{search_tf}.png"
+        )
 
         # Add the score to Database
         with sqlite3.connect(
