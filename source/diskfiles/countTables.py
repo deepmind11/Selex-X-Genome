@@ -151,12 +151,12 @@ class CountTable(DiskFile):
         ax.scatter(x, y)
 
         # Step 4: Customize the plot
-        ax.set_title(f"{self.tf}_X_{search_tf} for {self.file_path.name[:11]}")
+        ax.set_title(f"{motif.tf}_X_{search_tf} for {self.file_path.name[:11]}")
         ax.set_xlabel("Bin Number")
         ax.set_ylabel("Enrichment")
 
         fig.savefig(
-            f"{str(self.file_path.parent)}/{self.file_path.name[:11]}_{self.tf}_X_{search_tf}.png"
+            f"{str(self.file_path.parent)}/{self.file_path.name[:11]}_{motif.tf}_X_{search_tf}.png"
         )
 
         # Add the score to Database

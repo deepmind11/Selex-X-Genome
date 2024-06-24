@@ -136,7 +136,7 @@ class Mononucleotide(Motif):
                     "--psam",
                     " ".join(PSAM),
                 ),
-                output=f'Score_{searchResult.tf}_{searchResult.organism.replace("+","_")}',
+                output=f'Score_{self.tf}_{searchResult.tf}_{searchResult.organism.replace("+","_")}',
                 cores=4,
                 time=8,
             )
