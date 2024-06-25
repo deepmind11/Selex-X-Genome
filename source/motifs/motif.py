@@ -86,6 +86,19 @@ class Mononucleotide(Motif):
 
         return score
 
+    def score_seq_standard(self, seq: str):
+        # Scores a sequence. Assert sequence lenght > motif lenght. Not mean centered.
+        motif_size = int(len(self.psam) / 4)
+        numpy_motif = np.array(self.psam).reshape(4, motif_size, order="F")
+
+        score = 0
+        for i in range(0, len(seq) - 2):
+            score += math.exp(
+                Mononucleotide.score_window(numpy_motif, seq[i : i + motif_size])
+            )
+
+        return score
+
     def score_random_kmers(
         self,
         data: Path = Path(

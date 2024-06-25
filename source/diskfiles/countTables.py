@@ -141,7 +141,7 @@ class CountTable(DiskFile):
 
         bin_df = CountTable.bin_count_table(count_table_df)
 
-        # Plot enrichment vs bin
+        # Plot Enrichment vs Bin
         # Step 2: Prepare the data
         x = list(range(bin_df.shape[0]))  # Example iterable for the x-axis
         y = list(bin_df["enrichment"])  # Example iterable for the y-axis
@@ -156,7 +156,72 @@ class CountTable(DiskFile):
         ax.set_ylabel("Enrichment")
 
         fig.savefig(
-            f"{str(self.file_path.parent)}/{self.file_path.name[:11]}_{motif.tf}_X_{search_tf}.png"
+            f"{str(self.file_path.parent)}/{self.file_path.name[:11]}_{motif.tf}_X_{search_tf}_Enr_vs_Bin.png"
+        )
+
+        # Plot Enrichment vs Score
+        # Step 2: Prepare the data
+        x = list(bin_df["score"])  # Example iterable for the x-axis
+        y = list(bin_df["enrichment"])  # Example iterable for the y-axis
+
+        # Step 3: Create the scatter plot
+        fig, ax = plt.subplots()
+        ax.scatter(x, y)
+
+        # Step 4: Customize the plot
+        ax.set_title(f"{motif.tf}_X_{search_tf} for {self.file_path.name[:11]}")
+        ax.set_xlabel("Score")
+        ax.set_ylabel("Enrichment")
+
+        fig.savefig(
+            f"{str(self.file_path.parent)}/{self.file_path.name[:11]}_{motif.tf}_X_{search_tf}_Enr_vs_Score.png"
+        )
+
+        # Standard Scoring (PSAM not mean centered)
+        count_table_df_st = self.get_pandas_df()
+        count_table_df_st["score"] = count_table_df_st["seq"].apply(
+            motif.score_seq_standard
+        )
+        count_table_df_st.sort_values(by="score", ascending=False, inplace=True)
+
+        bin_df_st = CountTable.bin_count_table(count_table_df_st)
+
+        # Plot Enrichment vs Bin
+        # Step 2: Prepare the data
+        x = list(range(bin_df_st.shape[0]))  # Example iterable for the x-axis
+        y = list(bin_df_st["enrichment"])  # Example iterable for the y-axis
+
+        # Step 3: Create the scatter plot
+        fig, ax = plt.subplots()
+        ax.scatter(x, y)
+
+        # Step 4: Customize the plot
+        ax.set_title(
+            f"{motif.tf}_X_{search_tf} for {self.file_path.name[:11]} (Standard Scoring)"
+        )
+        ax.set_xlabel("Bin Number")
+        ax.set_ylabel("Enrichment")
+
+        fig.savefig(
+            f"{str(self.file_path.parent)}/{self.file_path.name[:11]}_{motif.tf}_X_{search_tf}_Enr_vs_Bin_Standard.png"
+        )
+
+        # Plot Enrichment vs Score
+        # Step 2: Prepare the data
+        x = list(bin_df_st["score"])  # Example iterable for the x-axis
+        y = list(bin_df_st["enrichment"])  # Example iterable for the y-axis
+
+        # Step 3: Create the scatter plot
+        fig, ax = plt.subplots()
+        ax.scatter(x, y)
+
+        # Step 4: Customize the plot
+        ax.set_title(f"{motif.tf}_X_{search_tf} for {self.file_path.name[:11]}")
+        ax.set_xlabel("Score")
+        ax.set_ylabel("Enrichment")
+
+        fig.savefig(
+            f"{str(self.file_path.parent)}/{self.file_path.name[:11]}_{motif.tf}_X_{search_tf}_Enr_vs_Score_Standard.png"
         )
 
         # Add the score to Database
@@ -184,10 +249,15 @@ class CountTable(DiskFile):
             organism = motif.organism
             count_table_id = count_table_id
             top_row = bin_df.iloc[0,].to_dict()
+            top_row_st = bin_df_st.iloc[0,].to_dict()
             score = top_row["avg_score"]
             r0_count = top_row["r0_count"]
             r1_count = top_row["r1_count"]
             enrichment = top_row["enrichment"]
+            score_st = top_row_st["avg_score"]
+            r0_count_st = top_row_st["r0_count"]
+            r1_count_st = top_row_st["r1_count"]
+            enrichment_st = top_row_st["enrichment"]
             row = (
                 type1,
                 tf,
@@ -198,12 +268,16 @@ class CountTable(DiskFile):
                 r0_count,
                 r1_count,
                 enrichment,
+                score_st,
+                r0_count_st,
+                r1_count_st,
+                enrichment_st,
             )
 
             try:
                 cursor.executemany(
                     """
-                INSERT INTO "motif" ("type", "tf", "search_tf", "organism", "count_table_id", "score", "r0_count", "r1_count", "enrichment") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO "motif" ("type", "tf", "search_tf", "organism", "count_table_id", "score", "r0_count", "r1_count", "enrichment", "score_st", "r0_count_st", "r1_count_st", "enrichment_st") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                     [row],
                 )
