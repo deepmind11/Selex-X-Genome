@@ -161,7 +161,7 @@ class CountTable(DiskFile):
 
         # Plot Enrichment vs Score
         # Step 2: Prepare the data
-        x = list(bin_df["score"])  # Example iterable for the x-axis
+        x = list(bin_df["avg_score"])  # Example iterable for the x-axis
         y = list(bin_df["enrichment"])  # Example iterable for the y-axis
 
         # Step 3: Create the scatter plot
@@ -208,7 +208,7 @@ class CountTable(DiskFile):
 
         # Plot Enrichment vs Score
         # Step 2: Prepare the data
-        x = list(bin_df_st["score"])  # Example iterable for the x-axis
+        x = list(bin_df_st["avg_score"])  # Example iterable for the x-axis
         y = list(bin_df_st["enrichment"])  # Example iterable for the y-axis
 
         # Step 3: Create the scatter plot
