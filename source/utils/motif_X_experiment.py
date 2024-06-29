@@ -17,6 +17,7 @@ if __name__ == "__main__":
     parser.add_argument("organism", type=str)
     parser.add_argument("experiment", type=str)
     parser.add_argument("data_path", type=str)
+    parser.add_argument("fit_id", type=str)
     parser.add_argument(
         "--psam",
         nargs="*",
@@ -29,7 +30,8 @@ if __name__ == "__main__":
     psam = args.psam
     data_path = args.data_path
     search_tf = args.Search_TF
-    motif = Mononucleotide(args.TF, args.organism, psam)
+    fit_id = args.fit_id
+    motif = Mononucleotide(args.TF, args.organism, psam, fit_id)
 
     experiment = TFChipSeq(args.experiment)
     experiment.update_database()  # Update DB

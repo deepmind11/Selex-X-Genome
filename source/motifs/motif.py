@@ -23,9 +23,10 @@ from utils.slurmjob import Slurmjob
 
 
 class Mononucleotide(Motif):
-    def __init__(self, tf, organism, psam: list):
+    def __init__(self, tf, organism, psam: list, fit_id: str):
         super().__init__(tf, organism)
         self.psam = psam
+        self.fit_id = fit_id
 
     @classmethod
     def create_from_motif_central(cls, motifcentral: dict):
@@ -33,7 +34,8 @@ class Mononucleotide(Motif):
         tf = motifcentral["metadata"]["factors"][0]["gene_symbol"]
         organism = motifcentral["metadata"]["factors"][0]["tax_id"]
         psam = motifcentral["coefficients"]["bindingModes"][0]["mononucleotide"]
-        return cls(tf, organism, psam)
+        fit_id = motifcentral["metadata"]["fit_id"]
+        return cls(tf, organism, psam, fit_id)
 
     @staticmethod
     def score_window(numpy_motif, seq):
@@ -146,6 +148,7 @@ class Mononucleotide(Motif):
                     searchResult.organism,
                     experiment.accession,
                     data_path,
+                    self.fit_id,
                     "--psam",
                     " ".join(PSAM),
                 ),
