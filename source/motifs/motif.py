@@ -143,8 +143,8 @@ class Mononucleotide(Motif):
                 job_script=Path(__file__).parent.parent
                 / Path("utils/motif_X_experiment.py"),
                 job_params=(
-                    searchResult.tf,
                     self.tf,
+                    searchResult.tf,
                     searchResult.organism,
                     experiment.accession,
                     data_path,
