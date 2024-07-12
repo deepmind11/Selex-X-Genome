@@ -42,11 +42,11 @@ if __name__ == "__main__":
         file.update_database()  # Update DB
         # Check whether counttable exists
         if Path(
-            f'{data_path}{args.TF}_{args.organism.replace("+","_")}/{experiment.accession}/{library.accession}/{file.accession}.tsv.gz'
+            f'{data_path}{search_tf}_{args.organism.replace("+","_")}/{experiment.accession}/{library.accession}/{file.accession}.tsv.gz'
         ).exists():
             count_table = CountTable(
                 Path(
-                    f'{data_path}{args.TF}_{args.organism.replace("+","_")}/{experiment.accession}/{library.accession}/{file.accession}.tsv.gz'
+                    f'{data_path}{search_tf}_{args.organism.replace("+","_")}/{experiment.accession}/{library.accession}/{file.accession}.tsv.gz'
                 )
             )
             count_table.update_database()
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         else:
             fastq = file.download(
                 Path(
-                    f'{data_path}{args.TF}_{args.organism.replace("+","_")}/{experiment.accession}/{library.accession}'
+                    f'{data_path}{search_tf}_{args.organism.replace("+","_")}/{experiment.accession}/{library.accession}'
                 )
             )
             subsampled_fq = fastq.subsample(size=1000000)
