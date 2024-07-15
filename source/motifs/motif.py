@@ -139,7 +139,7 @@ class Mononucleotide(Motif):
 
             slurmjob = Slurmjob(
                 file_path=job_path,
-                job_name=f'Score_{searchResult.tf}_{searchResult.organism.replace("+","_")}',
+                job_name=f'{searchResult.tf}_{experiment.accession}_{searchResult.organism.replace("+","_")}',
                 job_script=Path(__file__).parent.parent
                 / Path("utils/motif_X_experiment.py"),
                 job_params=(
@@ -152,7 +152,7 @@ class Mononucleotide(Motif):
                     "--psam",
                     " ".join(PSAM),
                 ),
-                output=f'Score_{self.tf}_{searchResult.tf}_{searchResult.organism.replace("+","_")}',
+                output=f'{self.tf}_{searchResult.tf}_{searchResult.organism.replace("+","_")}',
                 cores=1,
                 time=8,
             )

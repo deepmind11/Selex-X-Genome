@@ -41,7 +41,7 @@ class Slurmjob(DiskFile):
                 f"#SBATCH --error={self.file_path.parent}/{self.output}.err\n"
             )
             jf.writelines(f"#SBATCH -c {self.cores}\n")
-            jf.writelines("#SBATCH --mem-per-cpu=5G\n")
+            jf.writelines("#SBATCH --mem=16G\n")
             jf.writelines("#SBATCH --account=hblab\n")
             jf.writelines(f"#SBATCH -t {self.time}:59:00\n\n")
             jf.writelines(
