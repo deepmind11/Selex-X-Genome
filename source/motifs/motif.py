@@ -153,7 +153,7 @@ class Mononucleotide(Motif):
                     " ".join(PSAM),
                 ),
                 output=f'{self.tf}_{searchResult.tf}_{searchResult.organism.replace("+","_")}',
-                cores=1,
+                cores=2,
                 time=8,
             )
             slurmjob.submitJob()

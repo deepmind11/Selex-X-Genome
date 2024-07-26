@@ -2,9 +2,9 @@ from ENCODE.search import EncodeSearch
 from motifs.motif import Mononucleotide
 from motifs.parse_motifcentral_json import MOTIFCENTRAL
 
-motif = Mononucleotide.create_from_motif_central(MOTIFCENTRAL[872])
+motif = Mononucleotide.create_from_motif_central(MOTIFCENTRAL[222])
 
-search_result = EncodeSearch.search_using_MOTIFCENTRAL_json(MOTIFCENTRAL[872])
+search_result = EncodeSearch.search_using_MOTIFCENTRAL_json(MOTIFCENTRAL[222])
 #search_result = EncodeSearch('MAX', 'Homo+sapiens')
 
 
