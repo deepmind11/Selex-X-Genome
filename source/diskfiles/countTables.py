@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 
 import sqlite3
 import subprocess
+from collections import defaultdict
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -300,9 +301,17 @@ class CountTable(DiskFile):
             except Exception as e:
                 print("Error:", e)
 
-    def plot_enrichment_vs_bin(self, motif: Mononucleotide):
+    def plot_enrichment_vs_bin(self, motif_id: str):
         count_table_df = self.get_pandas_df()
-        count_table_df["score"] = count_table_df["seq"].apply(motif.score_seq)
+
+        score_series = pd.read_csv(
+            self.file_path.parent / Path(f"{self.file_path.name[:11]}_{motif_id}.txt"),
+            header=None,
+        )
+
+        score_series = score_series.iloc[:, 0]
+
+        count_table_df["score"] = score_series
         count_table_df.sort_values(by="score", ascending=False, inplace=True)
 
         bin_df = CountTable.bin_count_table(count_table_df)
@@ -320,7 +329,320 @@ class CountTable(DiskFile):
         ax.set_xlabel("Bin Number")
         ax.set_ylabel("Enrichment")
 
+        fig.savefig(
+            f"{str(self.file_path.parent)}/{self.file_path.name[:11]}_{motif_id}_X_{motif_id}_Enr_vs_Bin.png"
+        )
+
         return fig, ax
+
+    def plot_enrichment_vs_score(self, motif_id: str):
+
+        count_table_df = self.get_pandas_df()
+        score_series = pd.read_csv(
+            self.file_path.parent / Path(f"{self.file_path.name[:11]}_{motif_id}.txt"),
+            header=None,
+        )
+
+        score_series = score_series.iloc[:, 0]
+
+        count_table_df["score"] = score_series
+        count_table_df.sort_values(by="score", ascending=False, inplace=True)
+
+        bin_df = CountTable.bin_count_table(count_table_df)
+
+        # Plot Enrichment vs Score
+        # Step 2: Prepare the data
+        x = list(bin_df["avg_score"])  # Example iterable for the x-axis
+        y = list(bin_df["enrichment"])  # Example iterable for the y-axis
+
+        # Step 3: Create the scatter plot
+        fig, ax = plt.subplots()
+        ax.scatter(x, y)
+
+        # Step 4: Customize the plot
+        ax.set_title(f"{motif_id}_X_{motif_id} for {self.file_path.name[:11]}")
+        ax.set_xlabel("Score")
+        ax.set_ylabel("Enrichment")
+
+        fig.savefig(
+            f"{str(self.file_path.parent)}/{self.file_path.name[:11]}_{motif_id}_X_{motif_id}_Enr_vs_Score.png"
+        )
+
+        return fig, ax
+
+    def get_mn_base_composition(self):
+        "Saves the base composition of each sequence as a tsv file. [A,C,G,T]"
+        table_df = self.get_pandas_df()
+
+        base_counts = {"A": [], "C": [], "G": [], "T": []}
+
+        for index, row in table_df.iterrows():
+            seq = row["seq"]
+            probe_length = len(seq)
+            count = defaultdict(int)
+            for base in seq:
+                count[base] += 1
+
+            base_counts["A"].append(count["A"] / probe_length)
+            base_counts["C"].append(count["C"] / probe_length)
+            base_counts["G"].append(count["G"] / probe_length)
+            base_counts["T"].append(count["T"] / probe_length)
+
+        base_comp = pd.DataFrame.from_dict(base_counts)
+        base_comp.to_csv(
+            self.file_path.parent
+            / Path(f"{self.file_path.name[:11]}_mn_composition.tsv"),
+            sep="\t",
+        )
+
+        return base_comp
+
+    def get_dn_base_composition(self):
+        "Saves the dinucleotide base composition of each sequence as a tsv file. [A,C,G,T]"
+
+        table_df = self.get_pandas_df()
+
+        base_counts = {
+            "AA": [],
+            "AC": [],
+            "AG": [],
+            "AT": [],
+            "CA": [],
+            "CC": [],
+            "CG": [],
+            "CT": [],
+            "GA": [],
+            "GC": [],
+            "GG": [],
+            "GT": [],
+            "TA": [],
+            "TC": [],
+            "TG": [],
+            "TT": [],
+        }
+
+        for index, row in table_df.iterrows():
+            seq = row["seq"]
+            probe_length = len(seq)
+            count = defaultdict(int)
+            for index, _ in enumerate(seq):
+                if index == len(seq) - 1:
+                    break
+                count[seq[index : index + 2]] += 1
+
+            base_counts["AA"].append(count["AA"] / probe_length)
+            base_counts["AC"].append(count["AC"] / probe_length)
+            base_counts["AG"].append(count["AG"] / probe_length)
+            base_counts["AT"].append(count["AT"] / probe_length)
+            base_counts["CA"].append(count["CA"] / probe_length)
+            base_counts["CC"].append(count["CC"] / probe_length)
+            base_counts["CG"].append(count["CG"] / probe_length)
+            base_counts["CT"].append(count["CT"] / probe_length)
+            base_counts["GA"].append(count["GA"] / probe_length)
+            base_counts["GC"].append(count["GC"] / probe_length)
+            base_counts["GG"].append(count["GG"] / probe_length)
+            base_counts["GT"].append(count["GT"] / probe_length)
+            base_counts["TA"].append(count["TA"] / probe_length)
+            base_counts["TC"].append(count["TC"] / probe_length)
+            base_counts["TG"].append(count["TG"] / probe_length)
+            base_counts["TT"].append(count["TT"] / probe_length)
+
+        base_comp = pd.DataFrame.from_dict(base_counts)
+        base_comp.to_csv(
+            self.file_path.parent
+            / Path(f"{self.file_path.name[:11]}_dn_composition.tsv"),
+            sep="\t",
+        )
+
+        return base_comp
+
+    def plot_perbin_mn_composition(self, motif_id: str):
+
+        table_df = self.get_pandas_df()
+
+        score_series = pd.read_csv(
+            self.file_path.parent / Path(f"{self.file_path.name[:11]}_{motif_id}.txt"),
+            header=None,
+        )
+
+        score_series = score_series.iloc[:, 0]
+
+        table_df["score"] = score_series
+
+        mn_comp = pd.read_csv(
+            self.file_path.parent
+            / Path(f"{self.file_path.name[:11]}_mn_composition.tsv"),
+            sep="\t",
+            index_col=False,
+        )
+
+        # Concatenating the Columns
+
+        merged_df = pd.concat([table_df, mn_comp], axis=1, ignore_index=False)
+        merged_df.sort_values(by="score", ascending=False, inplace=True)
+        merged_df.reset_index(drop=True, inplace=True)
+
+        # Start Binning
+
+        i = 0
+        avg_score = []
+        r0_count = []
+        r1_count = []
+        A = []
+        C = []
+        G = []
+        T = []
+
+        while (
+            i < merged_df.shape[0] - 10
+        ):  # Keeping a buffer, so that the last bin isn't super small
+            bin = merged_df.iloc[i : i + 1000,].copy()
+
+            avg_score.append(bin.iloc[:, 2].mean())
+            r0_count.append(bin.iloc[:, 0].sum())
+            r1_count.append(bin.iloc[:, 1].sum())
+            A.append(bin.iloc[:, 5].mean())
+            C.append(bin.iloc[:, 6].mean())
+            G.append(bin.iloc[:, 7].mean())
+            T.append(bin.iloc[:, 8].mean())
+            i += 1000
+
+        # Make the plot
+        x_axis = range(len(A))
+
+        # plot
+        fig, ax = plt.subplots()
+
+        ax.set_title(
+            f"Mono-Nucleotide composition across bins for {self.file_path.name[:11]}"
+        )
+
+        ax.plot(x_axis, A, color="b", label="A")
+        ax.plot(x_axis, C, color="g", label="C")
+        ax.plot(x_axis, G, color="r", label="G")
+        ax.plot(x_axis, T, color="y", label="T")
+        ax.legend()
+
+        plt.savefig(
+            self.file_path.parent
+            / Path(f"{self.file_path.name[:11]}_{motif_id}_mn_composition.png")
+        )
+
+        return
+
+    def plot_perbin_dn_composition(self, motif_id):
+
+        table_df = self.get_pandas_df()
+
+        score_series = pd.read_csv(
+            self.file_path.parent / Path(f"{self.file_path.name[:11]}_{motif_id}.txt"),
+            header=None,
+        )
+
+        score_series = score_series.iloc[:, 0]
+
+        table_df["score"] = score_series
+
+        dn_comp = pd.read_csv(
+            self.file_path.parent
+            / Path(f"{self.file_path.name[:11]}_dn_composition.tsv"),
+            sep="\t",
+            index_col=False,
+        )
+
+        # Concatenating the Columns
+
+        merged_df = pd.concat([table_df, dn_comp], axis=1, ignore_index=False)
+        merged_df.sort_values(by="score", ascending=False, inplace=True)
+        merged_df.reset_index(drop=True, inplace=True)
+
+        # Start Binning
+
+        i = 0
+        avg_score = []
+        r0_count = []
+        r1_count = []
+        AA = []
+        AC = []
+        AG = []
+        AT = []
+        CA = []
+        CC = []
+        CG = []
+        CT = []
+        GA = []
+        GC = []
+        GG = []
+        GT = []
+        TA = []
+        TC = []
+        TG = []
+        TT = []
+
+        while (
+            i < merged_df.shape[0] - 10
+        ):  # Keeping a buffer, so that the last bin isn't super small
+            bin = merged_df.iloc[i : i + 1000,].copy()
+
+            avg_score.append(bin.iloc[:, 2].mean())
+            r0_count.append(bin.iloc[:, 0].sum())
+            r1_count.append(bin.iloc[:, 1].sum())
+            AA.append(bin.iloc[:, 5].mean())
+            AC.append(bin.iloc[:, 6].mean())
+            AG.append(bin.iloc[:, 7].mean())
+            AT.append(bin.iloc[:, 8].mean())
+            CA.append(bin.iloc[:, 9].mean())
+            CC.append(bin.iloc[:, 10].mean())
+            CG.append(bin.iloc[:, 11].mean())
+            CT.append(bin.iloc[:, 12].mean())
+            GA.append(bin.iloc[:, 13].mean())
+            GC.append(bin.iloc[:, 14].mean())
+            GG.append(bin.iloc[:, 15].mean())
+            GT.append(bin.iloc[:, 16].mean())
+            TA.append(bin.iloc[:, 17].mean())
+            TC.append(bin.iloc[:, 18].mean())
+            TG.append(bin.iloc[:, 19].mean())
+            TT.append(bin.iloc[:, 20].mean())
+            i += 1000
+
+        # Make the plot
+        x_axis = range(len(AA))
+
+        # plot
+        fig, ax = plt.subplots()
+
+        # Color map
+        cmap = plt.get_cmap("tab20")
+
+        ax.set_title(
+            f"Di-Nucleotide composition across bins for {self.file_path.name[:11]}"
+        )
+
+        ax.plot(x_axis, AA, color=cmap(0), label="AA")
+        ax.plot(x_axis, AC, color=cmap(1), label="AC")
+        ax.plot(x_axis, AG, color=cmap(2), label="AG")
+        ax.plot(x_axis, AT, color=cmap(3), label="AT")
+        ax.plot(x_axis, CA, color=cmap(4), label="CA")
+        ax.plot(x_axis, CC, color=cmap(5), label="CC")
+        ax.plot(x_axis, CG, color=cmap(6), label="CG")
+        ax.plot(x_axis, CT, color=cmap(7), label="CT")
+        ax.plot(x_axis, GA, color=cmap(8), label="GA")
+        ax.plot(x_axis, GC, color=cmap(9), label="GC")
+        ax.plot(x_axis, GG, color=cmap(10), label="GG")
+        ax.plot(x_axis, GT, color=cmap(11), label="GT")
+        ax.plot(x_axis, TA, color=cmap(12), label="TA")
+        ax.plot(x_axis, TC, color=cmap(13), label="TC")
+        ax.plot(x_axis, TG, color=cmap(14), label="TG")
+        ax.plot(x_axis, TT, color=cmap(15), label="TT")
+
+        ax.legend()
+
+        plt.savefig(
+            self.file_path.parent
+            / Path(f"{self.file_path.name[:11]}_{motif_id}_dn_composition.png")
+        )
+
+        return
 
     def fit_probound(self):
         pass
